@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Small Animal CPR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf9f5; --surface:#ffffff; --surface-2:#f0eee6; --ink:#141413; --ink-2:#5e5d59;
+  --line:#e3dfd3; --clay:#d97757; --clay-soft:#f6e4dc; --olive:#788c5d; --olive-soft:#e7ecdf;
+  --sky:#6a9bcc; --sky-soft:#e2ecf6; --red:#bf4d43; --red-soft:#f6e0dd;
+  --serif:'Noto Serif Thai',Georgia,serif; --sans:'IBM Plex Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1f1e1d; --surface:#262624; --surface-2:#30302e; --ink:#f0eee6; --ink-2:#a6a39a;
+    --line:#3d3c39; --clay-soft:#3a2a23; --olive-soft:#2b3124; --sky-soft:#232e3a; --red-soft:#3a2523;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1f1e1d; --surface:#262624; --surface-2:#30302e; --ink:#f0eee6; --ink-2:#a6a39a;
+  --line:#3d3c39; --clay-soft:#3a2a23; --olive-soft:#2b3124; --sky-soft:#232e3a; --red-soft:#3a2523;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;line-height:1.3;margin:0}
+h1{font-size:clamp(2rem,5vw,3.1rem)}
+h2{font-size:1.65rem;margin-bottom:6px}
+h3{font-size:1.1rem;margin-bottom:6px}
+p{margin:0 0 10px}
+.muted{color:var(--ink-2)}
+small,.small{font-size:.86rem}
+
+/* nav */
+nav.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;gap:18px;height:56px;overflow-x:auto;scrollbar-width:none}
+nav.top .wrap::-webkit-scrollbar{display:none}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-weight:600;white-space:nowrap}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--clay)}
+nav.top a{color:var(--ink-2);text-decoration:none;font-size:.92rem;white-space:nowrap}
+nav.top a:hover{color:var(--ink)}
+.theme-btn{margin-left:auto;background:none;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);padding:4px 12px;cursor:pointer;font:inherit;font-size:.85rem;white-space:nowrap}
+
+/* hero */
+header.hero{padding:56px 0 32px}
+.eyebrow{display:inline-block;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--clay);font-weight:600;margin-bottom:14px}
+.hero p.lead{font-size:1.1rem;color:var(--ink-2);max-width:640px;margin-top:14px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pill{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.88rem}
+.pill b{font-family:var(--mono);font-weight:500;color:var(--clay)}
+
+section{padding:36px 0;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+.num{font-family:var(--mono);color:var(--clay);font-size:.9rem}
+
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.card.tint-clay{background:var(--clay-soft);border-color:transparent}
+.card.tint-olive{background:var(--olive-soft);border-color:transparent}
+.card.tint-sky{background:var(--sky-soft);border-color:transparent}
+.card.tint-red{background:var(--red-soft);border-color:transparent}
+.card ul{margin:6px 0 0;padding-left:20px}
+.card li{margin:3px 0}
+.kpi{font-family:var(--mono);font-size:1.6rem;color:var(--ink);line-height:1.2}
+.kpi-label{font-size:.85rem;color:var(--ink-2)}
+.tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:2px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);margin-right:4px;vertical-align:middle}
+.tag.dog{background:var(--sky-soft);color:var(--sky)}
+.tag.cat{background:var(--olive-soft);color:var(--olive)}
+.tag.new{background:var(--clay-soft);color:var(--clay)}
+
+/* timer */
+.console{background:var(--ink);color:var(--bg);border-radius:20px;padding:24px;display:grid;gap:20px;grid-template-columns:1.1fr 1fr}
+@media (max-width:760px){.console{grid-template-columns:1fr}}
+:root[data-theme="dark"] .console,
+@media (prefers-color-scheme: dark){}
+.console .label{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;opacity:.6}
+.clock{font-family:var(--mono);font-size:clamp(2.6rem,9vw,4rem);line-height:1;margin:6px 0 2px}
+.ring-wrap{display:flex;align-items:center;gap:18px}
+.ring{width:110px;height:110px;flex:none}
+.ring circle{fill:none;stroke-width:8}
+.ring .bg{stroke:rgba(255,255,255,.12)}
+.ring .fg{stroke:var(--clay);stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .3s linear}
+.ring text{fill:currentColor;font-family:var(--mono);font-size:20px}
+.status{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 12px;font-size:.85rem}
+.chip.on{background:var(--clay);border-color:var(--clay);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:inherit;font-size:.92rem;border:none;border-radius:10px;padding:10px 16px;cursor:pointer;background:rgba(255,255,255,.1);color:inherit;transition:background .15s}
+.btn:hover{background:rgba(255,255,255,.18)}
+.btn.primary{background:var(--clay);color:#fff}
+.btn.primary:hover{background:#c96a4b}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.25)}
+.btn.active{outline:2px solid var(--clay)}
+.log{background:rgba(255,255,255,.06);border-radius:12px;padding:12px;height:190px;overflow:auto;font-family:var(--mono);font-size:.82rem}
+.log div{padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+.log .t{color:var(--clay);margin-right:8px}
+
+/* algorithm */
+.flow{display:grid;gap:12px}
+.step{display:grid;grid-template-columns:40px 1fr;gap:14px;align-items:start}
+.step .badge{width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;font-family:var(--mono);font-weight:500}
+.branch{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+@media (max-width:700px){.branch{grid-template-columns:1fr}}
+.branch .card h3{display:flex;align-items:center;gap:8px}
+.branch ol{margin:8px 0 0;padding-left:20px}
+.branch li{margin:5px 0}
+
+/* chest */
+.chest svg{width:100%;height:110px;display:block;margin-bottom:10px}
+.chest svg .body{fill:var(--surface-2);stroke:var(--ink-2);stroke-width:1.5}
+.chest svg .hand{fill:var(--clay)}
+.chest svg .arrow{stroke:var(--clay);stroke-width:2.5;fill:none;marker-end:url(#ah)}
+
+/* calculator */
+.calc-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px}
+.field label{display:block;font-size:.82rem;color:var(--ink-2);margin-bottom:4px}
+.field input{font:inherit;font-family:var(--mono);font-size:1.3rem;width:140px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.field input:focus{outline:2px solid var(--clay);outline-offset:1px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px}
+.seg button{font:inherit;border:none;background:none;color:var(--ink-2);padding:7px 16px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:.78rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);background:var(--surface-2)}
+tr:last-child td{border-bottom:none}
+td.mono{font-family:var(--mono);white-space:nowrap}
+td.vol{font-family:var(--mono);font-weight:500;color:var(--clay);white-space:nowrap}
+tr.group td{background:var(--bg);font-weight:600;font-size:.82rem;color:var(--ink-2);letter-spacing:.04em}
+tr.dim{opacity:.38}
+
+.note{border-left:3px solid var(--clay);padding:10px 16px;background:var(--surface);border-radius:0 10px 10px 0;margin-top:16px;font-size:.92rem}
+footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--ink-2);font-size:.86rem}
+footer a{color:var(--clay)}
+@media (max-width:520px){.wrap{padding:0 16px}.card{padding:16px}}
+@media print{nav.top,.console,.theme-btn{display:none}body{background:#fff}section{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="wrap">
+  <span class="brand"><span class="dot"></span>CPR · Small Animal</span>
+  <a href="#timer">Timer</a>
+  <a href="#recognize">Recognition</a>
+  <a href="#bls">BLS</a>
+  <a href="#monitor">Monitoring</a>
+  <a href="#als">ALS</a>
+  <a href="#drugs">Drug calculator</a>
+  <a href="#pca">Post-arrest</a>
+  <button class="theme-btn" id="themeBtn">◐ Theme</button>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="eyebrow">Emergency Resuscitation · Dogs & Cats</span>
+  <h1>การกู้ชีพสัตว์เล็ก<br>ตามแนวทาง RECOVER 2024</h1>
+  <p class="lead">คู่มือหน้าเดียวสำหรับจัดการภาวะหัวใจหยุดเต้น (CPA) ในสุนัขและแมว — ตั้งแต่การประเมิน, BLS, ALS, คำนวณยาตามน้ำหนัก ไปจนถึงการดูแลหลัง ROSC</p>
+  <div class="pills">
+    <span class="pill">Compression <b>100–120</b>/min</span>
+    <span class="pill">Depth <b>⅓–½</b> chest width</span>
+    <span class="pill">Ventilation <b>10</b>/min · <b>10 mL/kg</b> · Ti <b>1 s</b></span>
+    <span class="pill">Cycle <b>2 min</b></span>
+    <span class="pill">Epinephrine <b>0.01 mg/kg</b></span>
+  </div>
+</div></header>
+
+<!-- TIMER -->
+<section id="timer"><div class="wrap">
+  <div class="sec-head"><span class="num">00</span><h2>CPR Cycle Timer</h2></div>
+  <div class="console">
+    <div>
+      <div class="label">Total CPR time</div>
+      <div class="clock" id="total">00:00</div>
+      <div class="ring-wrap" style="margin-top:14px">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="bg" cx="60" cy="60" r="52"/>
+          <circle class="fg" id="ringFg" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/>
+          <text x="60" y="67" text-anchor="middle" id="cycleLeft">2:00</text>
+        </svg>
+        <div>
+          <div class="label">Cycle</div>
+          <div class="clock" style="font-size:2.2rem" id="cycleNo">0</div>
+          <div class="small" style="opacity:.7">สลับคนกดทุก 2 นาที</div>
+        </div>
+      </div>
+      <div class="status">
+        <span class="chip" id="chipSwap">Swap compressor · Check ECG</span>
+        <span class="chip" id="chipEpi">Epinephrine due</span>
+      </div>
+    </div>
+    <div style="display:grid;gap:12px;align-content:start">
+      <div class="btns">
+        <button class="btn primary" id="startBtn">▶ Start CPR</button>
+        <button class="btn ghost" id="metroBtn">♪ Metronome 110</button>
+        <button class="btn ghost" id="resetBtn">Reset</button>
+      </div>
+      <div class="btns">
+        <button class="btn" data-ev="Epinephrine given">+ Epi</button>
+        <button class="btn" data-ev="Vasopressin given">+ Vasopressin</button>
+        <button class="btn" data-ev="Atropine given (once)">+ Atropine</button>
+        <button class="btn" data-ev="Defibrillation">⚡ Shock</button>
+        <button class="btn" data-ev="Reversal given">+ Reversal</button>
+        <button class="btn" data-ev="ROSC">✓ ROSC</button>
+      </div>
+      <div class="log" id="log"><div class="muted" style="opacity:.6">Event log จะแสดงที่นี่</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- RECOGNITION -->
+<section id="recognize"><div class="wrap">
+  <div class="sec-head"><span class="num">01</span><h2>Recognition — ระบุภาวะ CPA ให้เร็ว</h2></div>
+  <div class="grid g3">
+    <div class="card"><h3>Airway</h3><p class="muted small">ตรวจทางเดินหายใจอุดตันหรือไม่</p></div>
+    <div class="card"><h3>Breathing</h3><p class="muted small">ไม่หายใจ หรือหายใจแบบ agonal (gasping) = ถือว่า apneic</p></div>
+    <div class="card"><h3>Circulation</h3><p class="muted small">ไม่ควรเสียเวลาคลำชีพจร/ฟังเสียงหัวใจเกิน 10 วินาที</p></div>
+  </div>
+  <div class="note"><b>หลักสำคัญ:</b> สัตว์ไม่ตอบสนองและไม่หายใจ → เริ่มกดหน้าอกทันที ความเสี่ยงจากการกดหน้าอกในสัตว์ที่ยังไม่ได้ arrest ต่ำมากเมื่อเทียบกับการเริ่มช้า</div>
+</div></section>
+
+<!-- BLS -->
+<section id="bls"><div class="wrap">
+  <div class="sec-head"><span class="num">02</span><h2>Basic Life Support</h2></div>
+
+  <div class="grid g2" style="margin-bottom:14px">
+    <div class="card tint-clay">
+      <h3>Chest compressions</h3>
+      <ul>
+        <li>ท่า lateral recumbency (ส่วนใหญ่)</li>
+        <li>อัตรา <b>100–120 ครั้ง/นาที</b> ทุกขนาดตัว</li>
+        <li>ลึก <b>⅓–½</b> ความกว้างของอก</li>
+        <li>ปล่อยให้อกคืนตัวเต็มที่ (no leaning)</li>
+        <li>กดต่อเนื่องรอบละ <b>2 นาที</b> แล้วเปลี่ยนคน ลดการหยุดให้น้อยที่สุด</li>
+      </ul>
+    </div>
+    <div class="card tint-sky">
+      <h3>Ventilation</h3>
+      <ul>
+        <li>ใส่ท่อช่วยหายใจ (cuffed ETT) และกดหน้าอกไปพร้อมกัน</li>
+        <li><b>10 ครั้ง/นาที</b> (1 ครั้งทุก 6 วินาที)</li>
+        <li>Tidal volume ~<b>10 mL/kg</b>, inspiratory time <b>1 วินาที</b></li>
+        <li>ถ้าใส่ท่อไม่ได้: tight-fitting mask หรือ mouth-to-nose <span class="tag new">2024</span></li>
+        <li>หลีกเลี่ยง hyperventilation</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin:22px 0 10px">ตำแหน่งการวางมือตามรูปทรงอก</h3>
+  <svg width="0" height="0" style="position:absolute"><defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#d97757"/></marker></defs></svg>
+  <div class="grid g2 chest">
+    <div class="card">
+      <svg viewBox="0 0 200 110"><ellipse class="body" cx="100" cy="62" rx="58" ry="38"/><circle class="hand" cx="100" cy="30" r="9"/><path class="arrow" d="M100 4 L100 18"/></svg>
+      <h3>Round-chested (ส่วนใหญ่ของสุนัขกลาง–ใหญ่)</h3>
+      <p class="muted small">กดตรงส่วนที่กว้างที่สุดของอก — อาศัย <i>thoracic pump</i></p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 200 110"><ellipse class="body" cx="100" cy="60" rx="32" ry="44"/><circle class="hand" cx="100" cy="20" r="9"/><path class="arrow" d="M100 -6 L100 8"/></svg>
+      <h3>Keel-chested (เช่น Greyhound)</h3>
+      <p class="muted small">กดตรงเหนือหัวใจ (ช่องซี่โครง 4–6 แนว costochondral) — <i>cardiac pump</i></p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 200 110"><ellipse class="body" cx="100" cy="58" rx="62" ry="34"/><rect class="hand" x="88" y="18" width="24" height="10" rx="4"/><path class="arrow" d="M100 0 L100 14"/></svg>
+      <h3>Flat/barrel-chested (เช่น English Bulldog)</h3>
+      <p class="muted small">จัดท่า dorsal recumbency แล้วกดที่ sternum เหนือหัวใจ</p>
+    </div>
+    <div class="card">
+      <svg viewBox="0 0 200 110"><ellipse class="body" cx="100" cy="58" rx="34" ry="30"/><path class="arrow" d="M48 58 L62 58"/><path class="arrow" d="M152 58 L138 58"/></svg>
+      <h3>แมวและสุนัขพันธุ์เล็ก</h3>
+      <p class="muted small">กดเหนือหัวใจด้วยมือเดียวแบบ circumferential หรือใช้สองมือ (cardiac pump)</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- MONITORING -->
+<section id="monitor"><div class="wrap">
+  <div class="sec-head"><span class="num">03</span><h2>Monitoring ระหว่าง CPR</h2></div>
+  <div class="grid g3">
+    <div class="card"><div class="kpi-label">ETCO₂ เป้าหมาย — สุนัข</div><div class="kpi">&gt; 15 mmHg</div><p class="muted small" style="margin-top:6px">สะท้อนคุณภาพการกดหน้าอก ถ้าต่ำ → ปรับเทคนิค/เปลี่ยนคนกด</p></div>
+    <div class="card"><div class="kpi-label">ETCO₂ เป้าหมาย — แมว</div><div class="kpi">&gt; 20 mmHg</div><p class="muted small" style="margin-top:6px">ค่าที่สูงขึ้นทันทีและชัดเจน อาจบ่งชี้ ROSC</p></div>
+    <div class="card"><div class="kpi-label">ECG</div><div class="kpi">ทุก 2 นาที</div><p class="muted small" style="margin-top:6px">ประเมิน rhythm สั้นๆ ระหว่างเปลี่ยนคนกด อย่าหยุดกดนาน</p></div>
+  </div>
+</div></section>
+
+<!-- ALS -->
+<section id="als"><div class="wrap">
+  <div class="sec-head"><span class="num">04</span><h2>Advanced Life Support</h2></div>
+  <div class="flow">
+    <div class="step"><div class="badge">1</div><div class="card"><h3>เปิดหลอดเลือด IV หรือ IO</h3><p class="muted small" style="margin:0">ทำขนานกับ BLS โดยไม่หยุดกดหน้าอก, ต่อ ECG และ capnography</p></div></div>
+    <div class="step"><div class="badge">2</div><div class="card"><h3>ให้ reversal ถ้ามียาสลบ/ยาซึม</h3><p class="muted small" style="margin:0">Naloxone (opioid), Flumazenil (benzodiazepine), Atipamezole (α₂-agonist) — หยุดยาสลบทั้งหมด</p></div></div>
+    <div class="step"><div class="badge">3</div><div>
+      <div class="branch">
+        <div class="card tint-olive">
+          <h3>Non-shockable · Asystole / PEA</h3>
+          <ol>
+            <li><b>Epinephrine 0.01 mg/kg</b> IV/IO ทุก 2 รอบ (≈ ทุก 3–5 นาที)</li>
+            <li>หรือ Vasopressin 0.8 U/kg ทดแทนได้</li>
+            <li><b>Atropine 0.04 mg/kg ครั้งเดียว</b> หากสงสัย vagal tone สูง <span class="tag new">2024</span></li>
+            <li>ห้ามใช้ high-dose epinephrine (0.1 mg/kg) ในทุกช่วง <span class="tag new">2024</span></li>
+          </ol>
+        </div>
+        <div class="card tint-red">
+          <h3>Shockable · VF / pulseless VT</h3>
+          <ol>
+            <li>Defibrillate ทันที — biphasic <b>2 J/kg</b> (ครั้งแรก)</li>
+            <li>กดหน้าอกต่อทันที 2 นาที ก่อนประเมิน rhythm</li>
+            <li>ถ้ายังคงอยู่: เพิ่มเป็น <b>4 J/kg</b> และคงไว้ทุกครั้งต่อไป <span class="tag new">2024</span></li>
+            <li>Refractory: Vasopressin (หรือ Epi), Lidocaine <span class="tag dog">DOG</span>, Amiodarone <span class="tag cat">CAT</span>, พิจารณา Esmolol</li>
+          </ol>
+        </div>
+      </div>
+    </div></div>
+    <div class="step"><div class="badge">4</div><div class="card"><h3>หาและแก้สาเหตุ (reversible causes)</h3><p class="muted small" style="margin:0">Hypovolemia, hypoxemia, hyperkalemia, acidosis, hypoglycemia, hypothermia, tension pneumothorax, pericardial effusion, toxins</p></div></div>
+  </div>
+  <div class="note">ระหว่าง charge เครื่อง defibrillator ให้กดหน้าอกต่อ · สั่ง “Clear!” ก่อนช็อกทุกครั้ง · biphasic ดีกว่า monophasic</div>
+</div></section>
+
+<!-- DRUGS -->
+<section id="drugs"><div class="wrap">
+  <div class="sec-head"><span class="num">05</span><h2>Drug & Defibrillation Calculator</h2></div>
+  <div class="calc-bar">
+    <div class="field"><label for="wt">น้ำหนัก (kg)</label><input id="wt" type="number" min="0.1" step="0.1" value="10" inputmode="decimal"></div>
+    <div class="field"><label>Species</label><div class="seg" id="species"><button class="on" data-sp="dog">สุนัข</button><button data-sp="cat">แมว</button></div></div>
+    <p class="muted small" style="margin:0 0 6px">ปริมาตรคำนวณจากความเข้มข้นที่ระบุ — ตรวจสอบขวดยาจริงก่อนฉีดทุกครั้ง</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>ยา / การรักษา</th><th>ขนาด</th><th>ความเข้มข้น</th><th>ปริมาณที่ได้</th><th>หมายเหตุ</th></tr></thead>
+      <tbody id="drugBody"></tbody>
+    </table>
+  </div>
+</div></section>
+
+<!-- POST ARREST -->
+<section id="pca"><div class="wrap">
+  <div class="sec-head"><span class="num">06</span><h2>Post–Cardiac Arrest Care</h2></div>
+  <div class="grid g3">
+    <div class="card"><h3>Hemodynamics</h3><ul class="small"><li>เป้าหมาย MAP ≥ 80 mmHg / SBP ≥ 100 mmHg</li><li>Fluid ถ้า hypovolemic, vasopressor/inotrope ตามข้อบ่งชี้</li></ul></div>
+    <div class="card"><h3>Oxygenation & Ventilation</h3><ul class="small"><li>SpO₂ 94–98% (หลีกเลี่ยง hyperoxemia)</li><li>PaCO₂ 32–43 mmHg (ETCO₂ ~30–40)</li></ul></div>
+    <div class="card"><h3>Neuroprotection & อื่นๆ</h3><ul class="small"><li>ยกหัวสูง ~30°, ไม่กดทับ jugular</li><li>หลีกเลี่ยง rapid active rewarming</li><li>ติดตาม glucose, electrolytes, lactate, ECG ต่อเนื่อง</li></ul></div>
+  </div>
+  <div class="note">ช่วงหลัง ROSC มีความเสี่ยง re-arrest สูง โดยเฉพาะ 1–4 ชั่วโมงแรก ควรอยู่ใน ICU พร้อมทีมและอุปกรณ์</div>
+</div></section>
+
+<footer><div class="wrap">
+  <p>อ้างอิงหลัก: 2024 RECOVER Guidelines (J Vet Emerg Crit Care 2024;34 Suppl 1) — BLS, ALS, Monitoring และ Post-cardiac arrest care. ดูต้นฉบับและ CPR algorithm chart ได้ที่ <a href="https://recoverinitiative.org" target="_blank" rel="noopener">recoverinitiative.org</a></p>
+  <p>เอกสารนี้จัดทำเพื่อการเรียนและทบทวน ไม่ใช่แทนดุลยพินิจทางคลินิกหรือโปรโตคอลของโรงพยาบาล</p>
+</div></footer>
+
+<script>
+/* ---------- theme ---------- */
+(function(){
+  const root=document.documentElement;
+  try{const s=localStorage.getItem('cpr-theme');if(s)root.dataset.theme=s;}catch(e){}
+  document.getElementById('themeBtn').onclick=()=>{
+    const dark=root.dataset.theme? root.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme=dark?'light':'dark';
+    try{localStorage.setItem('cpr-theme',root.dataset.theme);}catch(e){}
+  };
+})();
+
+/* ---------- drug calculator ---------- */
+const DRUGS=[
+  {g:'Vasopressors / Anticholinergic'},
+  {n:'Epinephrine (low dose)',d:0.01,u:'mg',c:1,cu:'mg/mL',note:'ทุก 2 รอบ (3–5 นาที) · IV/IO',sp:'both'},
+  {n:'Vasopressin',d:0.8,u:'U',c:20,cu:'U/mL',note:'ทดแทน/ร่วมกับ Epi · แนะนำใน refractory shockable',sp:'both'},
+  {n:'Atropine',d:0.04,u:'mg',c:0.54,cu:'mg/mL',note:'ครั้งเดียว เมื่อสงสัย vagal tone สูง',sp:'both'},
+  {g:'Antiarrhythmics (refractory VF / pVT)'},
+  {n:'Lidocaine',d:2,u:'mg',c:20,cu:'mg/mL',note:'แนะนำในสุนัข · slow IV/IO',sp:'dog'},
+  {n:'Amiodarone',d:5,u:'mg',c:50,cu:'mg/mL',note:'แนะนำในแมว · ระวัง hypotension/anaphylaxis',sp:'both',pref:'cat'},
+  {n:'Esmolol',d:0.5,u:'mg',c:10,cu:'mg/mL',note:'IV/IO ช้าๆ 3–5 นาที · adjunct',sp:'both'},
+  {g:'Reversal agents'},
+  {n:'Naloxone',d:0.04,u:'mg',c:0.4,cu:'mg/mL',note:'Opioid reversal',sp:'both'},
+  {n:'Flumazenil',d:0.01,u:'mg',c:0.1,cu:'mg/mL',note:'Benzodiazepine reversal',sp:'both'},
+  {n:'Atipamezole',d:0.1,u:'mg',c:5,cu:'mg/mL',note:'α₂-agonist reversal · IM/IV',sp:'both'},
+  {g:'Defibrillation (biphasic)'},
+  {n:'Shock ครั้งแรก',d:2,u:'J',def:true,note:'แล้ว CPR ต่อทันที 2 นาที',sp:'both'},
+  {n:'Shock ครั้งที่ 2 เป็นต้นไป',d:4,u:'J',def:true,note:'คงขนาดนี้ทุกครั้ง ไม่เพิ่มอีก',sp:'both'},
+];
+let species='dog';
+const fmt=(x)=>{if(!isFinite(x))return'–';if(x>=100)return x.toFixed(0);if(x>=10)return x.toFixed(1);if(x>=1)return x.toFixed(2);return x.toFixed(3).replace(/0+$/,'').replace(/\.$/,'');};
+function render(){
+  const w=parseFloat(document.getElementById('wt').value)||0;
+  document.getElementById('drugBody').innerHTML=DRUGS.map(r=>{
+    if(r.g)return `<tr class="group"><td colspan="5">${r.g}</td></tr>`;
+    const dim=(r.sp!=='both'&&r.sp!==species)?' class="dim"':'';
+    const dose=r.d*w;
+    const unitPerKg=r.def?'J/kg':`${r.u}/kg`;
+    const vol=r.def?`${fmt(dose)} J`:`${fmt(dose/r.c)} mL`;
+    const tags=r.sp==='dog'?'<span class="tag dog">DOG</span>':(r.pref==='cat'?'<span class="tag cat">CAT</span>':'');
+    return `<tr${dim}><td><b>${r.n}</b> ${tags}</td><td class="mono">${r.d} ${unitPerKg}<br><span class="muted">= ${fmt(dose)} ${r.u}</span></td><td class="mono">${r.def?'—':r.c+' '+r.cu}</td><td class="vol">${vol}</td><td class="small muted">${r.note}</td></tr>`;
+  }).join('');
+}
+document.getElementById('wt').addEventListener('input',render);
+document.querySelectorAll('#species button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#species button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');species=b.dataset.sp;render();
+});
+render();
+
+/* ---------- timer ---------- */
+const CYCLE=120, C=2*Math.PI*52;
+let running=false,start=0,elapsedBefore=0,tick=null,lastCycle=0;
+const $=id=>document.getElementById(id);
+const mmss=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function elapsed(){return elapsedBefore+(running?(Date.now()-start)/1000:0);}
+function logEv(txt){
+  const l=$('log'); if(l.querySelector('.muted'))l.innerHTML='';
+  const d=document.createElement('div');d.innerHTML=`<span class="t">${mmss(elapsed())}</span>${txt}`;
+  l.prepend(d);
+}
+function beep(f=880,ms=120,vol=.15){
+  try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;g.gain.value=vol;
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+ms/1000);}catch(e){}
+}
+let ctx=null;
+function update(){
+  const t=elapsed(); const cyc=Math.floor(t/CYCLE)+ (t>0?1:0); const inCyc=t%CYCLE; const left=CYCLE-inCyc;
+  $('total').textContent=mmss(t);
+  $('cycleNo').textContent=t>0?cyc:0;
+  $('cycleLeft').textContent=`${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')}`;
+  $('ringFg').style.strokeDashoffset=C*(inCyc/CYCLE);
+  const endWarn=running&&left<=10;
+  $('chipSwap').classList.toggle('on',endWarn);
+  // epi due at start of odd cycles (1,3,5...) within first 20 s, flagged also last 10 s before them
+  const epiNow=running&&(cyc%2===1)&&inCyc<20;
+  $('chipEpi').classList.toggle('on',epiNow);
+  if(running&&cyc!==lastCycle){
+    if(lastCycle>0){beep(660,300,.25);logEv(`— Cycle ${cyc} start · check rhythm, swap compressor`);}
+    lastCycle=cyc;
+  }
+}
+$('startBtn').onclick=()=>{
+  if(!running){running=true;start=Date.now();if(elapsedBefore===0){lastCycle=1;logEv('CPR started · Cycle 1');}
+    else logEv('Resumed');tick=setInterval(update,250);$('startBtn').textContent='❚❚ Pause';}
+  else{elapsedBefore=elapsed();running=false;clearInterval(tick);logEv('Paused');$('startBtn').textContent='▶ Resume';}
+  update();
+};
+$('resetBtn').onclick=()=>{
+  running=false;clearInterval(tick);elapsedBefore=0;lastCycle=0;
+  $('startBtn').textContent='▶ Start CPR';$('log').innerHTML='<div class="muted" style="opacity:.6">Event log จะแสดงที่นี่</div>';update();
+};
+document.querySelectorAll('[data-ev]').forEach(b=>b.onclick=()=>logEv(b.dataset.ev));
+
+/* metronome 110 bpm */
+let metro=null;
+$('metroBtn').onclick=()=>{
+  if(metro){clearInterval(metro);metro=null;$('metroBtn').classList.remove('active');return;}
+  beep(1000,40,.12);metro=setInterval(()=>beep(1000,40,.12),60000/110);$('metroBtn').classList.add('active');
+};
+update();
+</script>
+</body>
+</html>
