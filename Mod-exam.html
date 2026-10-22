@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ER Case Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf9f5; --surface:#ffffff; --surface-2:#f0eee6; --ink:#141413; --ink-2:#5e5d59;
+  --line:#e3dfd3; --clay:#d97757; --clay-soft:#f6e4dc; --olive:#788c5d; --olive-soft:#e7ecdf;
+  --sky:#6a9bcc; --sky-soft:#e2ecf6; --red:#bf4d43; --red-soft:#f6e0dd; --amber:#b8862b; --amber-soft:#f6ecd6;
+  --grid1:#f1d9cf; --grid2:#e6b9a8; --trace:#141413; --ecg-bg:#fffaf7;
+  --serif:'Noto Serif Thai',Georgia,serif; --sans:'IBM Plex Sans Thai',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1f1e1d; --surface:#262624; --surface-2:#30302e; --ink:#f0eee6; --ink-2:#a6a39a;
+    --line:#3d3c39; --clay-soft:#3a2a23; --olive-soft:#2b3124; --sky-soft:#232e3a; --red-soft:#3a2523; --amber-soft:#3a3122;
+    --grid1:#3a2d28; --grid2:#5a4038; --trace:#f0eee6; --ecg-bg:#221f1e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1f1e1d; --surface:#262624; --surface-2:#30302e; --ink:#f0eee6; --ink-2:#a6a39a;
+  --line:#3d3c39; --clay-soft:#3a2a23; --olive-soft:#2b3124; --sky-soft:#232e3a; --red-soft:#3a2523; --amber-soft:#3a3122;
+  --grid1:#3a2d28; --grid2:#5a4038; --trace:#f0eee6; --ecg-bg:#221f1e;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;line-height:1.3;margin:0}
+h1{font-size:clamp(2rem,5vw,3rem)}
+h2{font-size:1.45rem}
+h3{font-size:1.08rem}
+p{margin:0 0 10px}
+.muted{color:var(--ink-2)}
+.small{font-size:.86rem}
+.mono{font-family:var(--mono)}
+
+nav.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;align-items:center;gap:14px;height:58px}
+.brand{display:flex;align-items:center;gap:8px;font-family:var(--serif);font-weight:600;white-space:nowrap;cursor:pointer}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--clay)}
+.spacer{flex:1}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px}
+.seg button{font:inherit;font-size:.86rem;border:none;background:none;color:var(--ink-2);padding:5px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.theme-btn{background:none;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);padding:4px 12px;cursor:pointer;font:inherit;font-size:.85rem;white-space:nowrap}
+
+.btn{font:inherit;font-size:.95rem;border:1px solid var(--line);border-radius:10px;padding:10px 18px;cursor:pointer;background:var(--surface);color:var(--ink);transition:.15s}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn.primary:hover{background:#c96a4b}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.eyebrow{display:inline-block;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--clay);font-weight:600;margin-bottom:10px}
+
+/* home */
+.hero{padding:52px 0 26px}
+.hero .lead{font-size:1.08rem;color:var(--ink-2);max-width:680px;margin-top:12px}
+.home-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;align-items:center}
+select{font:inherit;font-size:.95rem;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:34px 0}
+.feature-grid .card h3{margin-bottom:4px}
+.case-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.case-card{cursor:pointer;transition:.15s}
+.case-card:hover{border-color:var(--clay);transform:translateY(-1px)}
+.case-card .sys{font-size:.76rem;color:var(--clay);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+section.block{padding:30px 0;border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);background:var(--surface-2)}
+tr:last-child td{border-bottom:none}
+
+/* case */
+.case-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:22px 0 14px}
+.case-head .meta{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:3px 11px;background:var(--surface);white-space:nowrap}
+.chip.clay{background:var(--clay-soft);border-color:transparent;color:var(--clay);font-weight:600}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px;align-items:start;padding-bottom:50px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}}
+.chart{display:grid;gap:12px}
+@media (min-width:901px){.chart{position:sticky;top:74px;max-height:calc(100vh - 90px);overflow:auto;padding-right:4px}}
+.signal{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.signal div{background:var(--surface-2);border-radius:10px;padding:8px 12px}
+.signal .k{font-size:.74rem;color:var(--ink-2)}
+.signal .v{font-weight:600}
+.pe{display:grid;grid-template-columns:1fr;gap:0}
+.pe-row{display:grid;grid-template-columns:130px 1fr;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+.pe-row:last-child{border-bottom:none}
+.pe-row .k{color:var(--ink-2)}
+.pe-row.ab .v{color:var(--red);font-weight:500}
+.lab td.val{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.lab td.ref{color:var(--ink-2);font-family:var(--mono);font-size:.8rem;white-space:nowrap}
+.flag{display:inline-block;font-size:.7rem;font-weight:700;border-radius:5px;padding:0 5px;margin-left:6px;font-family:var(--sans)}
+.flag.H{background:var(--red-soft);color:var(--red)}
+.flag.L{background:var(--sky-soft);color:var(--sky)}
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sec-title h3{font-size:1rem}
+
+.ecg{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ecg-bg);margin:4px 0 12px}
+.ecg-meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.74rem;color:var(--ink-2);padding:5px 10px;border-bottom:1px solid var(--line)}
+.ecg svg{display:block;width:100%;height:110px}
+
+.qcard{padding:24px}
+.progress{height:6px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-bottom:16px}
+.progress i{display:block;height:100%;background:var(--clay);transition:width .3s}
+.qhead{display:flex;justify-content:space-between;font-size:.82rem;color:var(--ink-2);margin-bottom:10px}
+.scene{background:var(--clay-soft);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.94rem}
+h3.q{font-size:1.15rem;margin:6px 0 14px;line-height:1.45}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:11px 14px;cursor:pointer;background:var(--surface);transition:.12s;font-size:.95rem}
+.opt:hover{border-color:var(--ink-2)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .box{width:18px;height:18px;margin-top:3px;border:1.5px solid var(--ink-2);border-radius:50%;display:grid;place-items:center}
+.opt input[type=checkbox]+.box{border-radius:5px}
+.opt:has(input:checked){border-color:var(--clay);background:var(--clay-soft)}
+.opt:has(input:checked) .box{border-color:var(--clay);background:var(--clay)}
+.opt:has(input:checked) .box::after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.opt.right{border-color:var(--olive)!important;background:var(--olive-soft)!important}
+.opt.wrong{border-color:var(--red)!important;background:var(--red-soft)!important}
+.opt.locked{cursor:default}
+.hint{font-size:.8rem;color:var(--ink-2);margin:8px 0 0}
+.numrow{display:flex;align-items:center;gap:10px}
+.numrow input{font:inherit;font-family:var(--mono);font-size:1.4rem;width:180px;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.numrow input:focus{outline:2px solid var(--clay);outline-offset:1px}
+.numrow .unit{font-family:var(--mono);color:var(--ink-2)}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.fb{margin-top:16px;border-radius:12px;padding:14px 16px;font-size:.93rem}
+.fb.ok{background:var(--olive-soft)}
+.fb.partial{background:var(--amber-soft)}
+.fb.bad{background:var(--red-soft)}
+.fb-h{font-weight:600;margin-bottom:6px}
+.fb ul{margin:4px 0 8px;padding-left:20px}
+.fb .exp{margin:6px 0 0;color:var(--ink)}
+.labmini{margin-bottom:12px}
+
+/* results */
+.res-top{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;padding:30px 0 20px}
+@media (max-width:640px){.res-top{grid-template-columns:1fr}}
+.score-ring{width:150px;height:150px}
+.score-ring circle{fill:none;stroke-width:12}
+.score-ring .bg{stroke:var(--surface-2)}
+.score-ring .fg{stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.score-ring text{font-family:var(--mono);fill:var(--ink)}
+.grade{display:inline-block;padding:3px 12px;border-radius:999px;font-weight:600;font-size:.88rem;margin-bottom:8px}
+.grade.g1{background:var(--olive-soft);color:var(--olive)}
+.grade.g2{background:var(--amber-soft);color:var(--amber)}
+.grade.g3{background:var(--red-soft);color:var(--red)}
+.fixlist{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.fixlist li{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--clay);border-radius:0 10px 10px 0;padding:10px 14px;font-size:.93rem}
+.fixlist li.harm{border-left-color:var(--red)}
+.review{display:grid;gap:10px}
+.rv{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.rv summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;padding:12px 16px}
+.rv summary::-webkit-details-marker{display:none}
+.rv .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff}
+.rv .ic.ok{background:var(--olive)} .rv .ic.partial{background:var(--amber)} .rv .ic.bad{background:var(--red)}
+.rv .body{padding:0 16px 14px 54px;font-size:.92rem}
+.rv .body p{margin:4px 0}
+.points{margin:0;padding-left:20px}
+.points li{margin:4px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:800px){.two{grid-template-columns:1fr}}
+footer{padding:30px 0 50px;border-top:1px solid var(--line);color:var(--ink-2);font-size:.84rem}
+@media (max-width:560px){.wrap{padding:0 16px}.card,.qcard{padding:16px}.pe-row{grid-template-columns:105px 1fr}nav.top .brand span.txt{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="wrap">
+  <span class="brand" id="homeLink"><span class="dot"></span><span class="txt">ER Case Simulator</span></span>
+  <span class="spacer"></span>
+  <div class="seg" id="modeSeg"><button data-m="practice" class="on">Practice</button><button data-m="exam">Exam</button></div>
+  <button class="theme-btn" id="themeBtn">◐</button>
+</div></nav>
+
+<main id="app"></main>
+
+<script>
+/* ================= helpers ================= */
+const R=(a,b)=>a+Math.random()*(b-a);
+const RI=(a,b)=>Math.floor(a+Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const f=(x,d=1)=>Number(x).toFixed(d);
+const rd=(x,d=1)=>Math.round(x*10**d)/10**d;
+const fmtN=x=>{x=+x;const a=Math.abs(x);let s=a>=100?x.toFixed(0):a>=10?x.toFixed(1):a>=1?x.toFixed(2):x.toFixed(3);if(s.includes('.'))s=s.replace(/0+$/,'').replace(/\.$/,'');return s;};
+const phFrom=(h,p)=>6.1+Math.log10(h/(0.03*p));
+const hco3From=(ph,p)=>0.03*p*Math.pow(10,ph-6.1);
+const beFrom=(ph,h)=>0.93*(h-24.4+14.8*(ph-7.4));
+const dogComp=h=>37-0.7*(21-h)+R(-1,2.5);
+const esc=s=>String(s);
+
+const REF={
+ dog:{pH:[7.35,7.45],pCO2:[35,45],HCO3:[20,24],BE:[-4,4],Na:[140,154],K:[3.5,5.5],Cl:[105,118],iCa:[1.25,1.45],Glu:[70,140],Lac:[0,2.5],PCV:[37,55],TS:[5.5,7.5],AG:[12,24]},
+ cat:{pH:[7.35,7.45],pCO2:[33,45],HCO3:[18,23],BE:[-5,3],Na:[147,160],K:[3.5,5.3],Cl:[113,123],iCa:[1.1,1.4],Glu:[70,150],Lac:[0,2.5],PCV:[30,45],TS:[6,8],AG:[13,27]}
+};
+const LABROWS=[['pH','pH','',3],['pCO2','pCO₂','mmHg',1],['HCO3','HCO₃⁻','mmol/L',1],['BE','Base excess','mmol/L',1],['Na','Na⁺','mmol/L',0],['K','K⁺','mmol/L',1],['Cl','Cl⁻','mmol/L',0],['iCa','iCa²⁺','mmol/L',2],['Glu','Glucose','mg/dL',0],['Lac','Lactate','mmol/L',1],['PCV','PCV','%',0],['TS','Total solids','g/dL',1]];
+const SEX={M:'เพศผู้',MN:'เพศผู้ทำหมัน',F:'เพศเมีย',FS:'เพศเมียทำหมัน'};
+
+function patient(opts){
+  const o=pick(opts);
+  return {sp:o.sp,breed:pick(o.breeds),wt:rd(R(o.wt[0],o.wt[1]),1),age:RI(o.age[0],o.age[1]),sex:pick(o.sex)};
+}
+/* o: HCO3 + (pCO2 | pH), Na,K,AG,iCa,Glu,Lac,PCV,TS, extra:[[label,val,unit,[lo,hi],dec]] */
+function makeLabs(o){
+  let HCO3,pCO2;
+  if(o.pH!=null){pCO2=rd(o.pCO2,1);HCO3=rd(hco3From(o.pH,pCO2),1);}
+  else{HCO3=rd(o.HCO3,1);pCO2=rd(o.pCO2,1);}
+  const pH=rd(phFrom(HCO3,pCO2),3);
+  const Na=Math.round(o.Na),K=rd(o.K,1);
+  const Cl=Math.round(Na+K-HCO3-o.AG);
+  return {pH,pCO2,HCO3,BE:rd(beFrom(pH,HCO3),1),Na,K,Cl,iCa:rd(o.iCa,2),Glu:Math.round(o.Glu),Lac:rd(o.Lac,1),PCV:Math.round(o.PCV),TS:rd(o.TS,1),
+    extra:(o.extra||[]).map(([l,v,u,r,d])=>[l,rd(v,d),u,r,d])};
+}
+function normalLabs(sp){
+  const dog=sp==='dog';
+  return makeLabs({pH:R(7.37,7.42),pCO2:dog?R(36,42):R(34,40),Na:dog?R(143,150):R(150,156),K:R(3.9,4.8),AG:R(15,20),iCa:dog?R(1.27,1.38):R(1.15,1.3),Glu:R(90,130),Lac:R(0.8,1.8),PCV:dog?R(40,50):R(32,40),TS:R(6.1,7.2)});
+}
+function kScale(K){if(K<=2)return 80;if(K<=2.5)return 60;if(K<=3)return 40;if(K<=3.5)return 28;return 20;}
+
+/* ================= step builders ================= */
+function single(o,noShuffle){const opts=o.opts.map(([t,c,why])=>({t,c:!!c,why}));return {pts:10,...o,type:'single',opts:noShuffle?opts:shuffle(opts)};}
+function multi(o){return {pts:15,...o,type:'multi',opts:shuffle(o.opts.map(([t,c,harm,why])=>({t,c:!!c,harm:!!harm,why})))};}
+function num(o){return {pts:10,tol:.25,...o,type:'num'};}
+
+const ABOPT={macid:'Metabolic acidosis (± respiratory compensation)',malk:'Metabolic alkalosis',racid:'Respiratory acidosis',ralk:'Respiratory alkalosis',mixed:'Mixed: metabolic acidosis + respiratory acidosis',normal:'ไม่มีความผิดปกติของกรด–ด่าง'};
+function abExplain(L,sp,key){
+  const ref=REF[sp];const st=L.pH<7.35?'acidemia':L.pH>7.45?'alkalemia':'pH อยู่ในช่วงปกติ';
+  let s=`pH ${f(L.pH,3)} → ${st} · HCO₃⁻ ${f(L.HCO3,1)} mmol/L (ref ${ref.HCO3.join('–')}) · pCO₂ ${f(L.pCO2,1)} mmHg (ref ${ref.pCO2.join('–')}). `;
+  if(key==='macid'){
+    s+='HCO₃⁻ ต่ำและเปลี่ยนไปทางเดียวกับ pH → primary metabolic acidosis โดย pCO₂ ที่ลดลงคือการชดเชยทางการหายใจ. ';
+    if(sp==='dog'){const e=37-0.7*(21-L.HCO3);s+=`สุนัข: expected pCO₂ ≈ 37 − 0.7×(21 − HCO₃⁻) = ${f(e,0)} ± 3 mmHg → ${Math.abs(L.pCO2-e)<=3?'ชดเชยเหมาะสม (simple disorder)':L.pCO2>e?'สูงกว่าที่คาด แปลว่ามี respiratory acidosis ร่วม':'ต่ำกว่าที่คาด แปลว่ามี respiratory alkalosis ร่วม'}.`;}
+    else s+='แมวชดเชยทางการหายใจได้จำกัด จึงไม่ควรใช้สูตรของสุนัขโดยตรง.';
+  }else if(key==='racid'){const d=L.pCO2-40;s+=`pCO₂ สูงและเปลี่ยนไปทางเดียวกับ pH → primary respiratory acidosis (hypoventilation). Acute: HCO₃⁻ เพิ่ม ~0.15 mmol/L ต่อ pCO₂ ที่เพิ่ม 1 mmHg (คาด ≈ ${f(21+0.15*d,1)}) · Chronic: เพิ่ม ~0.35 (≈ ${f(21+0.35*d,1)}).`;}
+  else if(key==='ralk'){const d=40-L.pCO2;s+=`pCO₂ ต่ำและเปลี่ยนไปทางเดียวกับ pH → primary respiratory alkalosis (hyperventilation จาก hypoxemia, ความเครียด, ปวด). Acute: HCO₃⁻ ลด ~0.25 ต่อ pCO₂ ที่ลด 1 mmHg (คาด ≈ ${f(21-0.25*d,1)}).`;}
+  else if(key==='mixed'){s+='pCO₂ สูง (respiratory acidosis) และ HCO₃⁻ ต่ำ (metabolic acidosis) พร้อมกัน ทั้งคู่ดึง pH ลง → mixed acidosis ซึ่งพบบ่อยหลัง arrest (hypoventilation + lactic acidosis).';}
+  return s;
+}
+function stepAB(p,key,L,extra={}){
+  L=L||p.labs;
+  return single({q:'แปลผล venous blood gas: ความผิดปกติของกรด–ด่างหลักคืออะไร',opts:Object.entries(ABOPT).map(([k,t])=>[t,k===key]),explain:abExplain(L,p.sp,key),fix:'ทบทวนการแปลผล acid–base เป็นขั้นตอน: pH → หาตัวที่เปลี่ยนไปทางเดียวกับ pH (HCO₃⁻ = metabolic, pCO₂ = respiratory) → ประเมิน compensation',...extra},true);
+}
+function stepAG(p){
+  const L=p.labs,ref=REF[p.sp];const ag=rd(L.Na+L.K-L.Cl-L.HCO3,1);
+  return num({q:'คำนวณ Anion gap จากผลเลือดนี้',unit:'mmol/L',lo:ag-1.5,hi:ag+1.5,ans:ag,tol:.15,
+    explain:`AG = (Na⁺ + K⁺) − (Cl⁻ + HCO₃⁻) = (${L.Na} + ${L.K}) − (${L.Cl} + ${L.HCO3}) = ${f(ag,1)} mmol/L (ref ${p.sp==='dog'?'สุนัข':'แมว'} ${ref.AG.join('–')}) → ${ag>ref.AG[1]?'สูง: มี unmeasured anion เพิ่ม เช่น lactate, ketoacids, uremic acids หรือ toxin (ethylene glycol)':'ปกติ: acidosis เกิดจากการสูญเสีย HCO₃⁻ หรือ Cl⁻ สูง (hyperchloremic)'}`,
+    fix:'ทบทวนสูตร Anion gap = (Na⁺ + K⁺) − (Cl⁻ + HCO₃⁻) และสาเหตุของ high-AG metabolic acidosis (Lactate, Ketones, Uremia, Toxins)'});
+}
+function stepK(p){
+  const K=p.labs.K,v=kScale(K),w=p.wt;
+  return num({q:`หลัง shock bolus จะเปลี่ยนเป็นสารน้ำ rehydration/maintenance — K⁺ = ${K} mmol/L ควรเติม KCl ลงในสารน้ำ 1 ลิตรกี่ mEq (ตาม sliding scale)`,unit:'mEq/L',lo:v*0.95,hi:v*1.05,ans:v,tol:.3,
+    explain:`Sliding scale: K⁺ 3.6–5.0 → 20 · 3.1–3.5 → 28 · 2.6–3.0 → 40 · 2.1–2.5 → 60 · ≤2.0 → 80 mEq/L ดังนั้น K⁺ ${K} → ${v} mEq/L · อัตราการให้ K⁺ ต้องไม่เกิน 0.5 mEq/kg/h (สัตว์ ${w} kg = ไม่เกิน ${fmtN(0.5*w)} mEq/h) และห้าม bolus KCl เด็ดขาด`,
+    fix:'ทบทวน KCl sliding scale และอัตราสูงสุด 0.5 mEq/kg/h'});
+}
+function stepCa(p){
+  const w=p.wt;
+  return num({q:`คำนวณปริมาตร 10% calcium gluconate ที่จะให้ IV (น้ำหนัก ${w} kg)`,unit:'mL',lo:0.5*w,hi:1.5*w,
+    explain:`ขนาด 0.5–1.5 mL/kg = ${fmtN(0.5*w)}–${fmtN(1.5*w)} mL ให้ IV ช้าๆ 10–15 นาทีขณะดู ECG (หยุดถ้า bradycardia แย่ลง) · ออกฤทธิ์ใน 1–3 นาที อยู่ได้ราว 20–30 นาที โดย “ไม่ได้ลดระดับ K⁺” แต่ช่วยคืน threshold potential ของกล้ามเนื้อหัวใจ`,
+    fix:'10% calcium gluconate 0.5–1.5 mL/kg IV ช้าๆ ภายใต้ ECG monitoring'});
+}
+function stepBolus(p){
+  const w=p.wt,dog=p.sp==='dog',lo=dog?10:5,hi=dog?20:10;
+  return num({q:`คำนวณปริมาตร isotonic crystalloid สำหรับ shock bolus ครั้งแรก (${dog?'สุนัข':'แมว'} ${w} kg)`,unit:'mL',lo:lo*w,hi:hi*w,
+    explain:`${dog?'สุนัข':'แมว'}: ${lo}–${hi} mL/kg = ${fmtN(lo*w)}–${fmtN(hi*w)} mL ให้ภายใน 15–20 นาที แล้วประเมิน HR, pulse, MM/CRT, SBP, mentation และ lactate ซ้ำก่อนให้ bolus ถัดไป (แทนการให้ shock dose เต็ม ${dog?90:60} mL/kg ครั้งเดียว)`,
+    fix:`Shock bolus ${dog?'สุนัข 10–20':'แมว 5–10'} mL/kg ต่อครั้ง และประเมินซ้ำหลังทุก bolus`});
+}
+
+/* ---------- CPR module ---------- */
+function cprSteps(p,rhythm,scene){
+  const w=p.wt,isVF=rhythm==='vf',S=[];
+  S.push(single({scene,q:'สิ่งที่ต้องทำทันทีเมื่อยืนยันว่าไม่หายใจและคลำชีพจรไม่ได้',opts:[
+    ['เริ่ม chest compression ทันที 100–120 ครั้ง/นาที ลึก ⅓–½ ความกว้างอก ใส่ท่อช่วยหายใจและช่วยหายใจ 10 ครั้ง/นาทีพร้อมกัน โดยไม่หยุดกด',true],
+    ['ฟังเสียงหัวใจและคลำชีพจรซ้ำอีก 1 นาทีเพื่อยืนยันก่อน',false,'การตรวจยืนยันนานเกิน 10 วินาทีลดโอกาส ROSC'],
+    ['ให้ epinephrine ก่อน แล้วค่อยเริ่มกดหน้าอก',false,'BLS (compression + ventilation) ต้องมาก่อน ยาเป็นส่วนเสริม'],
+    ['ช่วยหายใจ 30 ครั้ง/นาทีเพื่อแก้ hypoxemia ให้เร็วที่สุด',false,'Hyperventilation ลด coronary/cerebral perfusion']],
+    explain:'RECOVER 2024: เริ่ม BLS ทันที กดต่อเนื่องรอบละ 2 นาที ลดการหยุดให้น้อยที่สุด ช่วยหายใจ 10 ครั้ง/นาที inspiratory time 1 วินาที tidal volume ~10 mL/kg · ท่า lateral recumbency และวางมือตามรูปทรงอก',
+    fix:'เมื่อสงสัย CPA ให้เริ่ม chest compression ทันที ไม่ตรวจยืนยันนานเกิน 10 วินาที',pts:15}));
+  S.push(single({ecg:{type:rhythm,hr:RI(38,58)},q:`ต่อ ECG ได้ดังภาพ ขณะที่คลำชีพจรไม่ได้ rhythm นี้คืออะไร`,opts:[
+    ['Asystole — non-shockable',rhythm==='asystole'],['Pulseless electrical activity (PEA) — non-shockable',rhythm==='pea'],['Ventricular fibrillation — shockable',isVF],['Sinus bradycardia — ยังไม่ใช่ภาวะ arrest',false]],
+    explain:{asystole:'Asystole: เส้นเกือบตรง ไม่มี electrical activity (ตรวจ lead/gain ว่าต่อถูกต้องด้วย) → non-shockable',pea:'PEA: มี organized complex บน ECG แต่ไม่มีชีพจร/การบีบตัวที่ได้ผล → non-shockable (sinus bradycardia ที่ไม่มีชีพจร = PEA)',vf:'VF: คลื่นไม่เป็นระเบียบ ไม่มี QRS ที่ชัดเจน → shockable'}[rhythm],
+    fix:'ฝึกแยก arrest rhythm: asystole และ PEA (non-shockable) กับ VF/pulseless VT (shockable)'},true));
+  if(isVF){
+    S.push(single({q:'การจัดการ VF ที่ถูกต้องตาม RECOVER 2024',opts:[
+      ['Defibrillate ทันที (biphasic 2 J/kg) แล้วกดหน้าอกต่อทันที 2 นาทีก่อนดู rhythm ใหม่ ถ้ายังเป็น VF เพิ่มเป็น 4 J/kg',true],
+      ['ให้ epinephrine และ lidocaine ก่อน ถ้าไม่ดีขึ้นจึงช็อก',false,'VF ควร defibrillate เร็วที่สุดก่อนให้ยา'],
+      ['ช็อกติดกัน 3 ครั้ง (stacked shocks) แล้วค่อยกดหน้าอก',false,'ช็อกครั้งเดียวแล้วกดต่อทันที'],
+      ['Precordial thump เป็นการรักษาหลัก',false,'ใช้เฉพาะเมื่อไม่มี defibrillator']],
+      explain:'Shockable rhythm: defibrillation โดยเร็ว ช็อกครั้งเดียวแล้ว CPR ต่อ 2 นาที · ครั้งที่ 2 เป็นต้นไป 4 J/kg คงที่ · refractory VF: vasopressin (หรือ epinephrine), lidocaine (สุนัข), amiodarone (แมว), พิจารณา esmolol',
+      fix:'VF: defibrillate ทันที 2 J/kg → CPR 2 นาที → 4 J/kg ถ้ายังไม่หาย',pts:15}));
+    S.push(num({q:`กำหนดพลังงานช็อกครั้งแรก (biphasic) สำหรับน้ำหนัก ${w} kg`,unit:'J',lo:2*w*0.9,hi:2*w*1.1,ans:2*w,tol:.5,
+      explain:`2 J/kg × ${w} kg ≈ ${fmtN(2*w)} J (ครั้งถัดไป 4 J/kg ≈ ${fmtN(4*w)} J) · ระหว่างชาร์จให้กดหน้าอกต่อ และสั่ง “Clear!” ก่อนช็อกทุกครั้ง`,fix:'Biphasic defibrillation: 2 J/kg ครั้งแรก, 4 J/kg ครั้งถัดไป'}));
+  }else{
+    S.push(single({q:'การจัดการ non-shockable rhythm ที่ถูกต้องตาม RECOVER 2024',opts:[
+      ['กดหน้าอกต่อ ให้ epinephrine 0.01 mg/kg IV/IO ทุก 2 รอบ (3–5 นาที) และพิจารณา atropine 0.04 mg/kg ครั้งเดียวถ้าสงสัย vagal tone สูง',true],
+      ['Defibrillate 4 J/kg เพื่อกระตุ้นให้หัวใจกลับมาเต้น',false,'ห้ามช็อก asystole/PEA ไม่มีประโยชน์และทำให้ต้องหยุดกดหน้าอก'],
+      ['ให้ high-dose epinephrine 0.1 mg/kg ทุก 3 นาที',false,'RECOVER 2024 ไม่แนะนำ high-dose epinephrine ในทุกช่วงของ CPR'],
+      ['ให้ atropine 0.04 mg/kg ซ้ำทุก 3–5 นาที',false,'แนะนำ atropine เพียงครั้งเดียว']],
+      explain:'Non-shockable: BLS ต่อเนื่อง + low-dose epinephrine ทุกรอบเว้นรอบ (vasopressin 0.8 U/kg ทดแทนได้), atropine ครั้งเดียว และค้นหาแก้สาเหตุ เช่น hypovolemia, hyperkalemia, ยาสลบ',
+      fix:'Non-shockable: ห้ามช็อก ใช้ low-dose epinephrine 0.01 mg/kg และ atropine เพียงครั้งเดียว',pts:15}));
+    S.push(num({q:`คำนวณปริมาตร epinephrine 1 mg/mL ขนาด low dose (น้ำหนัก ${w} kg)`,unit:'mL',lo:0.01*w*0.9,hi:0.01*w*1.1,ans:0.01*w,tol:.5,
+      explain:`0.01 mg/kg × ${w} kg = ${fmtN(0.01*w)} mg = ${fmtN(0.01*w)} mL ของ 1 mg/mL · ในสัตว์เล็กควรเจือจางในกระบอกฉีดเพื่อวัดได้แม่นยำ แล้ว flush ตาม`,fix:'Epinephrine low dose 0.01 mg/kg = 0.01 mL/kg ของ 1 mg/mL'}));
+  }
+  const low=Math.random()<.5,et=low?RI(7,11):RI(36,48);
+  S.push(single({q:low?`ระหว่างกดหน้าอก ETCO₂ อ่านได้ ${et} mmHg ต่อเนื่อง หมายความว่าอย่างไร`:`ระหว่าง CPR ETCO₂ อยู่ราว 18–22 mmHg แล้วเพิ่มขึ้นทันทีเป็น ${et} mmHg หมายความว่าอย่างไร`,opts:low?[
+      ['คุณภาพการกดหน้าอกไม่เพียงพอ — ปรับตำแหน่ง/ความลึก หรือเปลี่ยนคนกด (เป้าหมาย >15 mmHg ในสุนัข, >20 mmHg ในแมว)',true],
+      ['สัตว์เริ่มหายใจเองได้ ควรหยุดช่วยหายใจ',false],['เป็นค่าปกติระหว่าง CPR ไม่ต้องแก้ไข',false],['ช่วยหายใจมากเกินไป ต้องลดเหลือ 4 ครั้ง/นาที',false]]:[
+      ['สงสัย ROSC — ตรวจชีพจรและ ECG สั้นๆ เมื่อครบรอบ',true],
+      ['การกดหน้าอกไม่มีประสิทธิภาพ',false],['ช่วยหายใจมากเกินไป',false],['ท่อช่วยหายใจเข้าหลอดอาหาร',false]],
+    explain:'ระหว่าง CPR ค่า ETCO₂ สะท้อน cardiac output (pulmonary blood flow) มากกว่าการระบายอากาศ ค่าต่ำบ่งชี้การกดไม่มีประสิทธิภาพหรือ ETT ผิดตำแหน่ง ค่าที่เพิ่มขึ้นทันทีอย่างชัดเจนบ่งชี้ ROSC',
+    fix:'ใช้ ETCO₂ ประเมินคุณภาพ CPR (>15 สุนัข, >20 แมว) และตรวจจับ ROSC'}));
+  return S;
+}
+
+/* ================= CASES ================= */
+const CASES=[
+/* 1 ---------- Feline UO ---------- */
+{id:'uo',title:'Feline urethral obstruction + hyperkalemia',sys:'Urinary · Electrolyte',make(){
+  const p=patient([{sp:'cat',breeds:['DSH (Domestic Shorthair)','Persian','Scottish Fold','British Shorthair','Exotic Shorthair'],wt:[3.5,6.8],age:[1,8],sex:['MN','MN','M']}]);
+  p.cc=pick(['เบ่งปัสสาวะแต่ไม่มีปัสสาวะออก ร้องเวลาเข้ากระบะทราย','เข้ากระบะทรายบ่อย เบ่งนาน ตอนนี้ซึมและอาเจียน','เลียอวัยวะเพศบ่อย ไม่กินอาหาร ซึมลงมาก']);
+  p.hx=`อาการเริ่ม ${RI(24,60)} ชั่วโมงก่อนมา · กินอาหารเม็ดเป็นหลัก · ${pick(['เคยมีประวัติ FLUTD เมื่อปีที่แล้ว','ไม่เคยมีประวัติโรคทางเดินปัสสาวะ','เพิ่งย้ายบ้านเมื่อสัปดาห์ก่อน'])}`;
+  const hr=RI(100,150);
+  p.pe=[['Mentation',pick(['Depressed','Obtunded']),1],['HR',`${hr} bpm (ต่ำสำหรับแมวที่เครียด)`,1],['RR',`${RI(28,44)} /min`,0],['Temp',`${f(R(35.8,37.3),1)} °C`,1],['MM / CRT',`ซีด / ${f(R(2,3),1)} s`,1],['Pulse','อ่อน',1],['Hydration',`ขาดน้ำ ~${RI(5,7)}%`,1],['Abdomen','กระเพาะปัสสาวะใหญ่ แข็ง เจ็บ บีบไม่ออก',1]];
+  p.labs=makeLabs({HCO3:R(9.5,13),pCO2:R(27,32),Na:R(146,156),K:R(7.4,9.6),AG:R(28,35),iCa:R(0.75,1.0),Glu:R(160,280),Lac:R(1.8,4),PCV:R(38,48),TS:R(7,8.2),
+    extra:[['BUN',R(110,180),'mg/dL',[16,36],0],['Creatinine',R(6,11),'mg/dL',[0.8,2],1],['Phosphorus',R(9,14),'mg/dL',[3,6.5],1]]});
+  p.ecg={type:'hyperk',hr};
+  const L=p.labs;
+  p.steps=[
+    single({q:'สิ่งที่ควรทำเป็นอันดับแรกเมื่อแมวตัวนี้มาถึง',opts:[
+      ['เปิด IV catheter ติด ECG และให้ 10% calcium gluconate IV ช้าๆ เพื่อปกป้องหัวใจ ก่อนให้ยาซึม/สวนท่อ',true],
+      ['วางยาสลบด้วย propofol แล้วสวนท่อปัสสาวะทันที เพราะเป็นการรักษาที่ต้นเหตุ',false,'การให้ยาซึม/ยาสลบขณะ K⁺ สูงและ ECG ผิดปกติเสี่ยงต่อ arrest'],
+      ['ถ่ายภาพรังสีช่องท้องก่อนเพื่อหานิ่วในท่อปัสสาวะ',false,'การวินิจฉัยยืนยันทำหลังจาก stabilize แล้ว'],
+      ['ให้ furosemide 2 mg/kg IV เพื่อขับ K⁺ ทางปัสสาวะ',false,'ท่ออุดตันอยู่ ปัสสาวะออกไม่ได้ furosemide ไม่ช่วยและทำให้ขาดน้ำมากขึ้น']],
+      explain:`K⁺ ${L.K} mmol/L ร่วมกับ bradycardia และ ECG แบบ hyperkalemia (P wave หาย, QRS กว้าง, T สูงแหลม) เป็นภาวะคุกคามชีวิต ลำดับคือ IV access → ECG → calcium gluconate → ลด K⁺ (insulin/dextrose + สารน้ำ) → sedation แล้ว decompress/สวนท่อ`,
+      fix:'Hyperkalemia ที่มีผลต่อ ECG ต้องปกป้องหัวใจด้วย calcium ก่อนทำหัตถการหรือให้ยาซึม',pts:15}),
+    stepAB(p,'macid'),
+    stepAG(p),
+    stepCa(p),
+    multi({q:'การรักษาใดที่เหมาะสมต่อ (เลือกได้หลายข้อ)',opts:[
+      ['Regular insulin 0.25–0.5 U/kg IV ร่วมกับ dextrose (1–2 g ต่อ insulin 1 U) แล้วตามด้วย dextrose 2.5–5% ในสารน้ำ',true,false,'ผลัก K⁺ เข้าเซลล์ ต้องให้ dextrose และติดตาม glucose ทุก 1–2 ชม.'],
+      ['สารน้ำ balanced isotonic crystalloid เช่น LRS หรือ Plasma-Lyte',true,false,'K⁺ ในสารน้ำเพียง 4–5 mmol/L จึงยัง dilute K⁺ ได้ และช่วยแก้ acidosis'],
+      ['Decompressive cystocentesis ระหว่างรอสวนท่อ',true,false,'ลดความดันในกระเพาะปัสสาวะและได้ตัวอย่างปัสสาวะ ทำด้วยเข็มเล็กอย่างระมัดระวัง'],
+      ['เติม KCl 20 mEq/L ลงในสารน้ำตั้งแต่แรก',false,true,'K⁺ สูงอยู่แล้ว จะทำให้ hyperkalemia แย่ลงจนเกิด arrest ได้'],
+      ['งดสารน้ำจนกว่าจะสวนท่อสำเร็จ เพราะกลัวกระเพาะปัสสาวะแตก',false,true,'สารน้ำจำเป็นต่อการแก้ hypovolemia และลด K⁺'],
+      ['Dexamethasone 1 mg/kg IV เพื่อลดการอักเสบของท่อปัสสาวะ',false,false,'ไม่มีบทบาทในการรักษาภาวะฉุกเฉินนี้'],
+      ['Sodium bicarbonate 1–2 mEq/kg IV ช้าๆ',L.pH<7.1,false,L.pH<7.1?`pH ${f(L.pH,3)} < 7.1 จึงพิจารณาเป็นทางเลือกเสริมเพื่อผลัก K⁺ เข้าเซลล์ (ระวัง iCa ที่ต่ำอยู่แล้วจะลดลงอีก)`:`pH ${f(L.pH,3)} ยังไม่ต่ำกว่า 7.1 acidosis มักดีขึ้นเองหลังให้สารน้ำและแก้การอุดตัน และ bicarbonate จะลด iCa ที่ต่ำอยู่แล้ว`]],
+      explain:'หลักการลด K⁺: ผลักเข้าเซลล์ (insulin + dextrose, ± bicarbonate, β₂-agonist), dilute (สารน้ำ) และขับออก (แก้การอุดตัน) · ห้ามเสริม K⁺ ในระยะนี้',
+      fix:'ทบทวนแนวทางลด K⁺: insulin/dextrose, สารน้ำ, แก้การอุดตัน และห้ามเสริม K⁺ ในระยะ hyperkalemia'}),
+    single({q:'หลังสวนท่อและใส่ urinary catheter สำเร็จ สิ่งที่ต้องเฝ้าระวังมากที่สุดใน 24–48 ชม. แรกคือ',opts:[
+      ['Post-obstructive diuresis — วัด urine output ทุก 2–4 ชม. ปรับสารน้ำให้ทันกับ output และติดตาม K⁺ ซึ่งอาจกลับเป็น hypokalemia',true],
+      ['Hyperkalemia จะคงอยู่หลายวัน ต้องให้ insulin ทุก 6 ชม.',false],
+      ['ลดสารน้ำลงเหลือ maintenance ทันทีเพราะไตกลับมาทำงานแล้ว',false],
+      ['ถอด urinary catheter ทันทีเพื่อลดการติดเชื้อ',false]],
+      explain:'หลังแก้การอุดตัน แมวหลายตัวปัสสาวะออกมาก (บางตัว >5–10 mL/kg/h) จนขาดน้ำและ K⁺ ต่ำได้ ต้องจับคู่ ins/outs และเริ่มเสริม KCl เมื่อ K⁺ ลดลงต่ำกว่าเกณฑ์',
+      fix:'ติดตาม urine output และ electrolyte หลังแก้การอุดตัน (post-obstructive diuresis → hypokalemia)'})
+  ];
+  p.dx='Urethral obstruction ร่วมกับ hyperkalemia, high-AG metabolic acidosis, ionized hypocalcemia และ post-renal azotemia';
+  p.points=['Hyperkalemia + ECG ผิดปกติ: calcium gluconate ก่อน แล้วค่อยลด K⁺','สารน้ำ balanced crystalloid ใช้ได้ ไม่ทำให้ K⁺ สูงขึ้น','หลีกเลี่ยงยาซึม/ยาสลบจนกว่า K⁺ และ ECG จะดีขึ้น','เฝ้าระวัง post-obstructive diuresis และ hypokalemia ภายหลัง'];
+  return p;}},
+
+/* 2 ---------- GDV ---------- */
+{id:'gdv',title:'Gastric dilatation–volvulus (GDV)',sys:'GI · Shock',make(){
+  const p=patient([{sp:'dog',breeds:['Great Dane','German Shepherd','Standard Poodle','Weimaraner','Doberman Pinscher','Labrador Retriever'],wt:[28,60],age:[5,11],sex:['M','MN','F','FS']}]);
+  p.cc=pick(['พยายามอาเจียนแต่ไม่มีอะไรออก ท้องป่องขึ้นเรื่อยๆ','น้ำลายไหลมาก กระสับกระส่าย ท้องโตหลังกินอาหารมื้อใหญ่','ยืนไม่นิ่ง พยายามขย้อน ท้องตึงมาก']);
+  p.hx=`เริ่มอาการ ${RI(2,5)} ชั่วโมงก่อนมา · กินอาหารวันละมื้อ และ${pick(['วิ่งเล่นหลังกินอาหาร','กินเร็วมาก','กินน้ำปริมาณมากหลังอาหาร'])}`;
+  const hasVT=Math.random()<.5,hr=hasVT?RI(195,240):RI(160,195);
+  p.pe=[['Mentation','ตื่น กระสับกระส่าย',1],['HR',`${hr} bpm`,1],['RR',`${RI(40,64)} /min (panting)`,1],['Temp',`${f(R(37.6,39),1)} °C`,0],['MM / CRT',`${pick(['ซีด','สีคล้ำ (muddy)'])} / ${f(R(2.5,3.5),1)} s`,1],['Pulse',hasVT?'อ่อน มี pulse deficit':'อ่อน เร็ว',1],['SBP (Doppler)',`${RI(70,88)} mmHg`,1],['Abdomen','ขยายใหญ่ เคาะได้เสียงโปร่ง (tympanic) ด้านซ้ายบน',1]];
+  const HCO3=R(13.5,17);
+  p.labs=makeLabs({HCO3,pCO2:dogComp(HCO3),Na:R(142,150),K:R(2.9,3.4),AG:R(23,29),iCa:R(1.1,1.24),Glu:R(110,160),Lac:R(5,9.5),PCV:R(52,62),TS:R(6,7.2)});
+  p.ecg={type:hasVT?'vt':'vpc',hr};
+  const L=p.labs,w=p.wt;
+  p.steps=[
+    single({q:'ลำดับการจัดการเบื้องต้นที่เหมาะสมที่สุด',opts:[
+      ['ใส่ IV catheter ขนาดใหญ่ที่ cephalic vein (ขาหน้า) 1–2 เส้น ให้ shock fluid และ opioid ลดปวด แล้วทำ gastric decompression',true],
+      ['ใส่ catheter ที่ lateral saphenous (ขาหลัง) เพราะทำได้ง่ายในสุนัขตัวใหญ่',false,'กระเพาะที่ขยายกดทับ caudal vena cava สารน้ำจากขาหลังไหลกลับหัวใจได้ไม่ดี'],
+      ['นำเข้าผ่าตัดทันทีโดยยังไม่ต้อง stabilize',false,'ต้องผ่าตัดเร็ว แต่ต้อง stabilize (สารน้ำ, decompress, ลดปวด) ก่อนวางยาสลบ'],
+      ['ให้ metoclopramide แล้วรอดูอาการ 2–3 ชม.',false,'GDV เป็นภาวะที่ต้องรักษาและผ่าตัดเร่งด่วน ห้ามรอ']],
+      explain:'GDV ทำให้เกิด obstructive + hypovolemic + distributive shock ใช้ cephalic catheter ให้สารน้ำเป็น bolus ลดปวดด้วย full μ-opioid ทำ decompression แล้วผ่าตัด derotation + gastropexy',
+      fix:'GDV: ใช้ catheter ขาหน้า stabilize และ decompress ก่อนผ่าตัดอย่างเร่งด่วน',pts:15}),
+    stepBolus(p),
+    stepAB(p,'macid'),
+    single({q:`Lactate ${L.Lac} mmol/L ควรแปลผลและใช้อย่างไร`,opts:[
+      ['Type A hyperlactatemia จาก tissue hypoperfusion — ใช้ติดตามการตอบสนองต่อการรักษา (lactate clearance) ซึ่งมีความหมายมากกว่าค่าครั้งเดียว',true],
+      ['Lactate สูงแปลว่ากระเพาะ necrosis แน่นอน ควรแนะนำ euthanasia',false,'ค่าเดียวไม่ใช่ตัวตัดสินพยากรณ์'],
+      ['Type B hyperlactatemia จากยา ไม่ต้องสนใจ',false],
+      ['เป็น artifact จากการเก็บเลือดนาน ไม่มีความหมายทางคลินิก',false]],
+      explain:'Lactate สูงจาก hypoperfusion (type A) ค่าเริ่มต้นที่สูงสัมพันธ์กับความเสี่ยง gastric necrosis แต่ไม่ใช่ตัวตัดสิน การลดลงของ lactate หลังให้สารน้ำ (clearance) เป็นตัวบ่งชี้พยากรณ์ที่ดีกว่า',
+      fix:'แยก type A/B hyperlactatemia และใช้ lactate trend แทนค่าเดียวในการประเมินพยากรณ์'}),
+    ...(hasVT?[
+      single({q:`ECG แสดง ventricular tachycardia ~${hr} bpm ร่วมกับ pulse deficit และ SBP ต่ำ ควรทำอย่างไร`,opts:[
+        ['ให้ lidocaine 2 mg/kg IV ช้าๆ (ซ้ำได้) ต่อด้วย CRI ถ้าตอบสนอง พร้อมแก้ hypovolemia, ปวด และ hypokalemia',true],
+        ['ไม่ต้องรักษา VT เพราะจะหายเองหลังผ่าตัด',false,'VT ที่เร็ว >180 bpm หรือมีผลต่อ hemodynamic ควรรักษา'],
+        ['ให้ atropine 0.04 mg/kg',false,'atropine ใช้กับ bradyarrhythmia ไม่ใช่ VT'],
+        ['Defibrillate 4 J/kg ทันที',false,'VT ที่ยังมีชีพจรไม่ใช่ข้อบ่งชี้ของ unsynchronized defibrillation']],
+        explain:'เกณฑ์รักษา ventricular arrhythmia: อัตรา >180–200 bpm, R-on-T, multiform หรือมีผลต่อ perfusion · Lidocaine 2 mg/kg IV (สะสมไม่เกิน ~8 mg/kg) แล้ว CRI 25–80 µg/kg/min · hypokalemia ทำให้ lidocaine ได้ผลน้อยลง',
+        fix:'ทบทวนเกณฑ์และการรักษา VT ในสุนัข: lidocaine 2 mg/kg IV'}),
+      num({q:'คำนวณปริมาตร 2% lidocaine (20 mg/mL) สำหรับ bolus 2 mg/kg',unit:'mL',lo:0.1*w*0.9,hi:0.1*w*1.1,ans:0.1*w,
+        explain:`2 mg/kg × ${w} kg = ${fmtN(2*w)} mg ÷ 20 mg/mL = ${fmtN(0.1*w)} mL IV ช้าๆ 1–2 นาที`,fix:'ฝึกคำนวณ mg → mL: (dose × BW) ÷ concentration'})
+    ]:[
+      single({q:'ECG พบ sinus tachycardia ร่วมกับ VPC เป็นครั้งคราว (ไม่ต่อเนื่อง) ควรทำอย่างไร',opts:[
+        ['ยังไม่ต้องให้ antiarrhythmic — แก้สาเหตุก่อน: hypovolemia, ปวด, hypokalemia, hypoxemia และติดตาม ECG ต่อเนื่อง',true],
+        ['ให้ lidocaine bolus ทุกครั้งที่เห็น VPC',false],
+        ['ให้ esmolol เพื่อลดอัตราการเต้นของหัวใจ',false,'sinus tachycardia เป็นการชดเชย shock การลดอัตราจะลด cardiac output'],
+        ['ให้ atropine เพื่อ overdrive suppression',false]],
+        explain:'VPC เดี่ยวๆ ใน GDV พบบ่อยจาก myocardial ischemia และ catecholamine ให้รักษาเมื่อเข้าเกณฑ์ (เร็ว >180, R-on-T, multiform, มีผลต่อ perfusion)',
+        fix:'Ventricular arrhythmia ที่ไม่เข้าเกณฑ์ ให้แก้สาเหตุก่อนให้ antiarrhythmic'})
+    ]),
+    stepK(p),
+    multi({q:'แผนการรักษาต่อไปที่เหมาะสม (เลือกได้หลายข้อ)',opts:[
+      ['Gastric decompression ด้วย orogastric tube หรือ percutaneous trocarization',true,false,'ลดความดันในกระเพาะ ช่วยให้ venous return ดีขึ้น'],
+      ['Full μ-opioid เช่น methadone 0.2–0.3 mg/kg IV หรือ fentanyl',true,false,'ลดปวดได้ดีและ reverse ได้'],
+      ['ผ่าตัด derotation + gastropexy เมื่อ stabilize ได้ (ไม่เลื่อนนาน)',true,false,'การผ่าตัดล่าช้าสัมพันธ์กับ gastric necrosis และพยากรณ์ที่แย่ลง'],
+      ['ถ่ายภาพรังสี right lateral เพื่อยืนยัน double-bubble/compartmentalization เมื่อ stable พอ',true,false,'ยืนยันการวินิจฉัยก่อนผ่าตัด'],
+      ['Meloxicam 0.2 mg/kg IV เพื่อลดปวด',false,true,'NSAID ห้ามใช้ในภาวะ shock/hypoperfusion เสี่ยง AKI และแผลในทางเดินอาหาร'],
+      ['ให้สารน้ำทั้งคืนแล้วผ่าตัดวันรุ่งขึ้น',false,true,'การเลื่อนผ่าตัดเพิ่มความเสี่ยง necrosis และการตาย']],
+      explain:'GDV = shock resuscitation + analgesia + decompression + ผ่าตัด (derotation, ประเมิน/ตัดกระเพาะและม้ามที่ตาย, gastropexy) + ติดตาม ECG และ lactate หลังผ่าตัด',
+      fix:'หลีกเลี่ยง NSAID ในภาวะ shock และอย่าเลื่อนการผ่าตัด GDV'})
+  ];
+  if(Math.random()<.3){p.cpa=true;p.steps.push(...cprSteps(p,pick(['vf','pea','asystole']),`ระหว่างเตรียมเข้าห้องผ่าตัด สุนัขล้มลง หายใจเฮือก (agonal) แล้วหยุดหายใจ คลำ femoral pulse ไม่ได้`));}
+  p.dx='Gastric dilatation–volvulus ร่วมกับ obstructive/hypovolemic shock, lactic (high-AG) metabolic acidosis, hypokalemia'+(hasVT?' และ ventricular tachycardia':' และ VPC')+(p.cpa?' → เกิด CPA ระหว่างการรักษา':'');
+  p.points=['ใช้ cephalic catheter ใน GDV','Shock bolus 10–20 mL/kg แล้วประเมินซ้ำ','Lactate trend สำคัญกว่าค่าเดียว','รักษา ventricular arrhythmia เมื่อเข้าเกณฑ์ (lidocaine 2 mg/kg)','ห้าม NSAID ใน shock, อย่าเลื่อนผ่าตัด'];
+  return p;}},
+
+/* 3 ---------- Hemorrhagic shock ---------- */
+{id:'hbc',title:'Hemorrhagic shock (trauma / hemoabdomen)',sys:'Trauma · Shock',make(){
+  const p=patient([{sp:'dog',breeds:['พันธุ์ผสม','บางแก้ว','Beagle','Labrador Retriever','Shih Tzu','Thai Ridgeback'],wt:[6,30],age:[1,8],sex:['M','MN','F','FS']}]);
+  p.cc=pick(['ถูกรถชนหน้าบ้านเมื่อ 30 นาทีก่อน','ถูกรถจักรยานยนต์ชน ล้มลงและลุกไม่ขึ้น','วิ่งตัดถนนถูกรถชน มีแผลถลอกหลายจุด']);
+  p.hx=`${pick(['มีเลือดออกจากแผลฉีกขาดที่ขาหน้า','มีแผลถลอกตามลำตัว','ไม่พบแผลเปิดชัดเจน'])} · ไม่มีโรคประจำตัว`;
+  const hr=RI(165,210);
+  p.pe=[['Mentation','Obtunded',1],['HR',`${hr} bpm`,1],['RR',`${RI(40,60)} /min`,1],['Temp',`${f(R(36.6,38),1)} °C`,1],['MM / CRT','ซีดขาว / >3 s',1],['Pulse','femoral อ่อนมาก, metatarsal คลำไม่ได้',1],['SBP (Doppler)',`${RI(55,78)} mmHg`,1],['AFAST',`Free fluid positive (AFS ${RI(2,4)}/4)`,1],['TFAST','ไม่พบ pneumothorax/pleural effusion',0]];
+  const HCO3=R(13.5,17.5);
+  p.labs=makeLabs({HCO3,pCO2:dogComp(HCO3),Na:R(142,150),K:R(3.5,4.2),AG:R(24,31),iCa:R(1.02,1.18),Glu:R(140,210),Lac:R(5,9.5),PCV:R(32,40),TS:R(3.8,4.8)});
+  p.ecg={type:'sinus',hr};
+  p.steps=[
+    single({q:'แนวทางการประเมินและจัดการเบื้องต้น (primary survey) ที่ถูกต้อง',opts:[
+      ['XABCDE — ห้ามเลือดภายนอกที่รุนแรงก่อน → airway → breathing (ให้ O₂) → circulation (IV access, fluid) → disability',true],
+      ['ถ่ายภาพรังสีทั้งตัวก่อนเพื่อหากระดูกหัก',false,'ภาพรังสีทำหลังจาก stabilize'],
+      ['ให้ NSAID ลดปวดแล้วรอสังเกตอาการ',false,'NSAID ห้ามใช้ใน shock'],
+      ['ทำ exploratory laparotomy ทันที',false,'hemoabdomen จาก trauma ส่วนใหญ่รักษาได้ด้วย medical management']],
+      explain:'Trauma triage ใช้ XABCDE: ควบคุม exsanguinating hemorrhage ก่อน แล้วประเมิน airway, breathing, circulation, disability และใช้ AFAST/TFAST ร่วมประเมิน',
+      fix:'ทบทวน primary survey แบบ XABCDE ในสัตว์ trauma',pts:15}),
+    stepBolus(p),
+    single({q:'เป้าหมายการให้สารน้ำในช่วงที่ยังมีเลือดออกในช่องท้องและยังควบคุมไม่ได้',opts:[
+      ['Hypotensive (low-volume) resuscitation — เป้าหมาย SBP ~80–90 mmHg (MAP ~60 mmHg) จนกว่าจะควบคุมเลือดออกได้',true],
+      ['ให้สารน้ำจน SBP > 140 mmHg เพื่อ perfusion สูงสุด',false,'ความดันสูงทำให้ clot หลุดและเลือดออกมากขึ้น และทำให้ coagulopathy จากการเจือจาง'],
+      ['ไม่ให้สารน้ำเลยจนกว่าจะผ่าตัด',false,'ต้องรักษา perfusion ของอวัยวะสำคัญ'],
+      ['ให้ 0.9% NaCl 90 mL/kg ครั้งเดียวให้เร็วที่สุด',false,'การให้ปริมาณมากครั้งเดียวทำให้เลือดออกเพิ่ม และ hyperchloremic acidosis']],
+      explain:'Permissive hypotension ลดการหลุดของ clot และการเจือจางของ coagulation factor · ไม่ใช้ในสัตว์ที่มี traumatic brain injury (ต้องรักษา cerebral perfusion)',
+      fix:'ใช้ hypotensive resuscitation ในเลือดออกที่ยังควบคุมไม่ได้ (ยกเว้น TBI)'}),
+    single({q:`PCV ${p.labs.PCV}% และ TS ${p.labs.TS} g/dL แปลผลอย่างไร`,opts:[
+      ['TS ลดลงก่อน PCV ในการเสียเลือดเฉียบพลัน เพราะม้ามหดตัวปล่อยเม็ดเลือดแดงออกมา PCV ที่ไม่ต่ำมากจึงไม่ได้ตัดการเสียเลือด',true],
+      ['PCV ยังเกือบปกติ แปลว่าไม่ได้เสียเลือดมาก',false],
+      ['TS ต่ำจาก protein-losing enteropathy',false],
+      ['ค่าทั้งสองไม่มีประโยชน์ในภาวะฉุกเฉิน',false]],
+      explain:'ในสุนัข การหดตัวของม้าม (splenic contraction) ทำให้ PCV ไม่ลดลงทันที แต่ TS ลดลงเร็ว ภาวะ PCV ปกติ + TS ต่ำ เป็นสัญญาณสำคัญของ acute hemorrhage',
+      fix:'ใช้ PCV ร่วมกับ TS: TS ลดลงก่อนใน acute blood loss'}),
+    stepAB(p,'macid'),
+    multi({q:'การรักษาเพิ่มเติมที่เหมาะสม (เลือกได้หลายข้อ)',opts:[
+      ['ให้ blood product (pRBC หรือ fresh whole blood 10–20 mL/kg) ถ้ายังไม่ตอบสนองต่อสารน้ำหรือ PCV ลดลงต่อเนื่อง',true,false,'ทดแทน oxygen-carrying capacity และ coagulation factor (whole blood)'],
+      ['Tranexamic acid 10 mg/kg IV ช้าๆ',true,false,'antifibrinolytic ลดเลือดออกใน trauma'],
+      ['Abdominal counter-pressure bandage',true,false,'ช่วยลดเลือดออกในช่องท้องชั่วคราว (ระวังการหายใจ)'],
+      ['Opioid ลดปวด เช่น methadone หรือ fentanyl (titrate)',true,false,'ลดปวดและ catecholamine โดยมีผลต่อ hemodynamic น้อย'],
+      ['Hydroxyethyl starch ปริมาณมากเพื่อเพิ่ม volume',false,true,'เสี่ยง AKI และ coagulopathy ไม่แนะนำ'],
+      ['Meloxicam 0.2 mg/kg เพื่อลดปวดและอักเสบ',false,true,'NSAID ห้ามใช้ใน shock และเลือดออก']],
+      explain:'Damage-control resuscitation: ควบคุมเลือดออก, hypotensive resuscitation, ให้ blood product เร็ว, ป้องกัน trauma-induced coagulopathy (TXA), ลดปวดด้วย opioid',
+      fix:'ทบทวน damage-control resuscitation และข้อห้าม NSAID/HES'})
+  ];
+  if(Math.random()<.3){p.cpa=true;p.steps.push(...cprSteps(p,pick(['pea','asystole','vf']),`ระหว่างให้ bolus ครั้งที่ ${RI(2,3)} สุนัขหายใจเฮือก (agonal) แล้วหยุดหายใจ คลำชีพจรไม่ได้`));}
+  p.dx='Hemorrhagic (hypovolemic) shock จาก traumatic hemoabdomen ร่วมกับ lactic metabolic acidosis และ hypoproteinemia'+(p.cpa?' → เกิด CPA ระหว่างการรักษา':'');
+  p.points=['XABCDE primary survey','Shock bolus 10–20 mL/kg + ประเมินซ้ำ','Hypotensive resuscitation จนกว่าจะควบคุมเลือดออกได้ (ยกเว้น TBI)','TS ลดก่อน PCV ใน acute hemorrhage','Blood product และ TXA ตามข้อบ่งชี้'];
+  return p;}},
+
+/* 4 ---------- DKA ---------- */
+{id:'dka',title:'Diabetic ketoacidosis (DKA)',sys:'Endocrine · Acid–base',make(){
+  const p=patient([{sp:'dog',breeds:['Miniature Schnauzer','Poodle','Bichon Frisé','Pug','พันธุ์ผสม'],wt:[5,12],age:[7,12],sex:['FS','MN','F']},{sp:'cat',breeds:['DSH (Domestic Shorthair)','Burmese','Siamese','Persian'],wt:[3.5,7],age:[8,14],sex:['MN','MN','FS']}]);
+  const dog=p.sp==='dog',d=pick([6,8,10]);
+  p.cc=pick(['ไม่กินอาหาร อาเจียน ซึมมาก 2–3 วัน','กินน้ำและปัสสาวะมากหลายสัปดาห์ ช่วงนี้อาเจียนและไม่ลุกเดิน','ผอมลงทั้งที่กินเก่ง ตอนนี้ซึม หายใจลึก']);
+  p.hx=`PU/PD และน้ำหนักลด ${RI(2,6)} สัปดาห์ · ${dog?pick(['เคยเป็นตับอ่อนอักเสบ','ไม่ได้ทำหมัน เป็นสัดเมื่อเดือนก่อน','ไม่เคยมีโรคประจำตัว']):pick(['อ้วนมาก่อน','เคยได้ methylprednisolone acetate ฉีด','ไม่เคยมีโรคประจำตัว'])}`;
+  const hr=dog?RI(120,165):RI(180,230);
+  p.pe=[['Mentation','Depressed',1],['HR',`${hr} bpm`,dog],['RR',`${RI(32,50)} /min ลึก (Kussmaul)`,1],['Temp',`${f(R(37.0,38.6),1)} °C`,0],['MM / CRT',`ชมพูแห้ง / ${f(R(2,2.8),1)} s`,1],['Hydration',`ขาดน้ำ ~${d}% (skin tent, ตาลึก)`,1],['BCS',`${RI(3,4)}/9 กล้ามเนื้อลีบ`,1],['อื่นๆ','กลิ่นลมหายใจแบบ ketone (ผลไม้)',1]];
+  const HCO3=R(7,11.5);
+  p.labs=makeLabs({HCO3,pCO2:dog?dogComp(HCO3):R(22,29),Na:dog?R(132,145):R(140,152),K:R(2.6,3.4),AG:R(29,37),iCa:dog?R(1.12,1.3):R(1.05,1.25),Glu:R(420,650),Lac:R(1.5,3),PCV:dog?R(48,56):R(40,46),TS:R(7.2,8.4),
+    extra:[['β-hydroxybutyrate',R(4.5,8),'mmol/L',[0,0.6],1],['Phosphorus',R(2.0,3.2),'mg/dL',dog?[2.5,6]:[3,6.5],1],['BUN',R(40,75),'mg/dL',dog?[7,27]:[16,36],0],['Creatinine',R(1.6,2.8),'mg/dL',dog?[0.5,1.5]:[0.8,2],1]]});
+  p.ecg={type:'sinus',hr};
+  const w=p.wt,def=d/100*w*1000,ins=dog?2.2*w:1.1*w;
+  p.steps=[
+    stepAB(p,'macid'),
+    stepAG(p),
+    num({q:`คำนวณ fluid deficit จากการขาดน้ำ ~${d}% (น้ำหนัก ${w} kg)`,unit:'mL',lo:def*0.95,hi:def*1.05,ans:def,
+      explain:`Deficit (mL) = %dehydration × BW (kg) × 1000 = ${d/100} × ${w} × 1000 = ${fmtN(def)} mL ทดแทนใน 12–24 ชม. บวก maintenance และ ongoing losses (อาเจียน, ปัสสาวะ)`,
+      fix:'สูตร fluid deficit = %dehydration × BW × 1000 (mL)'}),
+    single({q:'ลำดับการรักษาที่เหมาะสมที่สุด',opts:[
+      ['เริ่มสารน้ำ isotonic + เสริม K⁺ ก่อน แล้วเริ่ม regular insulin หลังให้สารน้ำ ~2–6 ชม. (เมื่อ K⁺ ≥ ~3.5 mmol/L)',true],
+      ['ให้ regular insulin 0.5 U/kg IV ทันทีเพื่อลด glucose ให้เร็วที่สุด',false,'insulin ผลัก K⁺ และ phosphate เข้าเซลล์ → hypokalemia/hypophosphatemia รุนแรง และ glucose ที่ลดเร็วเสี่ยง cerebral edema'],
+      ['ให้ NPH insulin SC ทันที',false,'ในสัตว์ขาดน้ำการดูดซึม SC ไม่แน่นอน และไม่เหมาะกับภาวะ DKA'],
+      ['ให้ sodium bicarbonate เต็ม deficit ก่อน แล้วค่อยให้สารน้ำ',false,'bicarbonate ไม่ใช่การรักษาหลัก และเสี่ยง hypokalemia, paradoxical CSF acidosis']],
+      explain:'DKA: สารน้ำแก้ hypovolemia และลด glucose ได้ส่วนหนึ่ง ต้องเสริม K⁺ (และ phosphate) ก่อน/ระหว่างเริ่ม insulin · เป้าหมายให้ glucose ลดลงประมาณ 50–75 mg/dL/h',
+      fix:'DKA: สารน้ำและ K⁺ ก่อน insulin, หลีกเลี่ยงการลด glucose เร็วเกินไป',pts:15}),
+    stepK(p),
+    num({q:`โปรโตคอล regular insulin CRI: ต้องเติม regular insulin กี่ unit ลงใน 0.9% NaCl 250 mL สำหรับ${dog?'สุนัข':'แมว'}ตัวนี้`,unit:'U',lo:ins*0.9,hi:ins*1.1,ans:ins,
+      explain:`${dog?'สุนัข 2.2':'แมว 1.1'} U/kg ใน 0.9% NaCl 250 mL = ${fmtN(ins)} U · flush สาย ~50 mL ก่อน (insulin เกาะพลาสติก) เริ่ม ~10 mL/h แล้วปรับตาม glucose ทุก 1–2 ชม. · เมื่อ glucose < 250 mg/dL เติม dextrose 2.5–5% และลดอัตรา insulin`,
+      fix:`Regular insulin CRI: ${dog?'สุนัข 2.2':'แมว 1.1'} U/kg ใน 250 mL 0.9% NaCl`}),
+    single({q:`Phosphorus ${p.labs.extra[1][1]} mg/dL ตอนนี้ ควรเฝ้าระวังอะไรเมื่อเริ่ม insulin`,opts:[
+      ['Insulin ผลัก phosphate เข้าเซลล์ → hypophosphatemia รุนแรง → hemolytic anemia, กล้ามเนื้ออ่อนแรง: ติดตาม phosphate และ PCV และเสริม potassium phosphate 0.01–0.03 mmol/kg/h เมื่อต่ำ',true],
+      ['Hyperphosphatemia จาก insulin ต้องให้ phosphate binder',false],
+      ['Phosphate ไม่เปลี่ยนแปลงระหว่างการรักษา ไม่ต้องตรวจซ้ำ',false],
+      ['ให้ calcium gluconate ป้องกัน hypophosphatemia',false]],
+      explain:'Total body phosphate ใน DKA ต่ำแม้ค่าในเลือดแรกเข้าจะปกติ หลังเริ่ม insulin/สารน้ำค่าจะลดลงเร็ว โดยเฉพาะแมว เสี่ยง hemolysis',
+      fix:'ติดตามและเสริม phosphate ระหว่างรักษา DKA (เสี่ยง hemolysis)'}),
+    single({q:'ข้อบ่งชี้ของ sodium bicarbonate ใน DKA',opts:[
+      ['พิจารณาเฉพาะ acidosis รุนแรง (pH < 7.0–7.1 หรือ HCO₃⁻ < ~8–10) ที่ยังคงอยู่หลังให้สารน้ำ โดยให้ ¼–⅓ ของ deficit (0.3 × BW × |BE|) ช้าๆ',true],
+      ['ให้ทุกรายเพื่อแก้ acidosis ให้เร็วที่สุด',false],
+      ['ให้เมื่อ glucose > 600 mg/dL',false],
+      ['ไม่มีข้อบ่งชี้ใดๆ ห้ามใช้เด็ดขาด',false]],
+      explain:`Ketoacids จะถูก metabolize เป็น HCO₃⁻ เมื่อได้ insulin และสารน้ำ การให้ bicarbonate ทุกรายเพิ่มความเสี่ยง hypokalemia, iCa ลดลง และ paradoxical CSF acidosis · ตัวอย่าง deficit ของเคสนี้ = 0.3 × ${w} × ${f(Math.abs(p.labs.BE),1)} ≈ ${fmtN(0.3*w*Math.abs(p.labs.BE))} mEq`,
+      fix:'Bicarbonate ใช้เฉพาะ severe acidosis ที่ไม่ตอบสนองต่อสารน้ำ'})
+  ];
+  p.dx=`Diabetic ketoacidosis ใน${dog?'สุนัข':'แมว'}: high-AG metabolic acidosis (ketoacids), hyperglycemia, hypokalemia, dehydration ${d}%`;
+  p.points=['High-AG metabolic acidosis จาก ketoacid','สารน้ำ + K⁺ ก่อน insulin','Regular insulin CRI: สุนัข 2.2, แมว 1.1 U/kg ใน 250 mL','ติดตาม K⁺, phosphate, glucose ทุก 2–6 ชม.','Bicarbonate เฉพาะ severe acidosis'];
+  return p;}},
+
+/* 5 ---------- Addison ---------- */
+{id:'addison',title:'Hypoadrenocortical (Addisonian) crisis',sys:'Endocrine · Electrolyte',make(){
+  const p=patient([{sp:'dog',breeds:['Standard Poodle','Portuguese Water Dog','West Highland White Terrier','Labrador Retriever','Bearded Collie','พันธุ์ผสม'],wt:[8,30],age:[2,6],sex:['F','FS','FS','MN']}]);
+  p.cc=pick(['ล้มลง อ่อนแรงมาก อาเจียนและถ่ายเหลว','ซึม ไม่กินอาหาร อาเจียน ตัวสั่น','อ่อนแรง ลุกไม่ขึ้น หลังเพิ่งไปฝากเลี้ยง']);
+  p.hx=`อาการทางเดินอาหารเป็นๆ หายๆ (waxing–waning) ${RI(1,4)} เดือน · ตอบสนองดีต่อสารน้ำที่คลินิกอื่นแต่กลับมาเป็นซ้ำ`;
+  const hr=RI(45,70);
+  p.pe=[['Mentation','Obtunded',1],['HR',`${hr} bpm (ต่ำแม้อยู่ในภาวะช็อก)`,1],['RR',`${RI(20,32)} /min`,0],['Temp',`${f(R(36.4,37.8),1)} °C`,1],['MM / CRT',`ซีด / ${f(R(2.5,3.2),1)} s`,1],['Pulse','อ่อน',1],['SBP (Doppler)',`${RI(60,80)} mmHg`,1],['Hydration',`ขาดน้ำ ~${RI(7,9)}%`,1],['CBC','ไม่พบ stress leukogram (lymphocyte ปกติ–สูง)',1]];
+  const HCO3=R(12,16);
+  p.labs=makeLabs({HCO3,pCO2:dogComp(HCO3),Na:R(120,132),K:R(7.2,9.0),AG:R(16,23),iCa:R(1.3,1.55),Glu:R(45,68),Lac:R(2,4),PCV:R(42,52),TS:R(6,7.2),
+    extra:[['BUN',R(70,140),'mg/dL',[7,27],0],['Creatinine',R(2.5,4.5),'mg/dL',[0.5,1.5],1]]});
+  p.ecg={type:'hyperk',hr};
+  const L=p.labs,ratio=rd(L.Na/L.K,1),w=p.wt;
+  p.steps=[
+    single({q:'ลำดับความสำคัญแรกในสุนัขตัวนี้',opts:[
+      ['รักษา hypovolemic shock ด้วย isotonic crystalloid IV bolus ติด ECG และจัดการผลของ hyperkalemia ต่อหัวใจ',true],
+      ['ทำ ACTH stimulation test ให้เสร็จก่อนเริ่มสารน้ำเพื่อไม่ให้ผลคลาดเคลื่อน',false,'ห้ามเลื่อนการรักษาภาวะช็อกเพื่อรอผลทดสอบ'],
+      ['ให้ prednisolone 2 mg/kg PO',false,'สัตว์ช็อกและอาเจียน ยา PO ไม่เหมาะ และ prednisolone รบกวนการตรวจ cortisol'],
+      ['ให้ atropine เพื่อแก้ bradycardia',false,'bradycardia เกิดจาก hyperkalemia ต้องแก้ที่ K⁺ และ calcium']],
+      explain:'Addisonian crisis คือ hypovolemic shock + hyperkalemia + hypoglycemia การให้สารน้ำอย่างรวดเร็วจะ dilute K⁺ และเพิ่ม GFR ทำให้ K⁺ ลดลงอย่างมีนัยสำคัญ',
+      fix:'Addisonian crisis: รักษา shock และ hyperkalemia ก่อน ไม่รอผลการทดสอบ',pts:15}),
+    num({q:'คำนวณ Na⁺:K⁺ ratio',unit:'',lo:ratio-0.6,hi:ratio+0.6,ans:ratio,tol:.1,
+      explain:`Na⁺:K⁺ = ${L.Na} ÷ ${L.K} = ${f(ratio,1)} (ปกติ ~27–40) · ratio < 27 ชวนสงสัย hypoadrenocorticism และ < 20 ยิ่งสงสัยมาก แต่ไม่ใช่การวินิจฉัยยืนยัน (พบได้ใน GI disease, effusion, renal/urinary disease)`,
+      fix:'Na⁺:K⁺ ratio < 27 ชวนสงสัย hypoadrenocorticism ต้องยืนยันด้วย ACTH stimulation test'}),
+    stepAB(p,'macid'),
+    stepCa(p),
+    single({q:'ถ้าต้องการให้ glucocorticoid ก่อน/ระหว่างทำ ACTH stimulation test ควรเลือกตัวใด',opts:[
+      ['Dexamethasone sodium phosphate 0.1–0.2 mg/kg IV',true],
+      ['Prednisolone sodium succinate',false,'cross-react กับการวัด cortisol ทำให้ผลผิด'],
+      ['Hydrocortisone',false,'คือ cortisol จึงรบกวนผล ACTH stim (ใช้ได้หลังเก็บตัวอย่างแล้ว)'],
+      ['ห้ามให้ glucocorticoid ใดๆ จนกว่าจะได้ผลยืนยัน',false,'สัตว์อยู่ในภาวะวิกฤต ไม่ควรรอ']],
+      explain:'Dexamethasone ไม่ cross-react กับ cortisol assay จึงให้ได้ก่อนทำ ACTH stim (ทำให้เสร็จภายในไม่กี่ชั่วโมง) · หลังยืนยันแล้วใช้ prednisolone + mineralocorticoid (DOCP หรือ fludrocortisone)',
+      fix:'ให้ dexamethasone ถ้าจำเป็นก่อน ACTH stimulation test เพราะไม่รบกวนการวัด cortisol'}),
+    single({q:`Na⁺ ${L.Na} mmol/L ควรวางแผนการแก้ Na⁺ อย่างไร`,opts:[
+      ['ติดตาม Na⁺ ทุก 4–6 ชม. และจำกัดการเพิ่ม Na⁺ ไม่เกิน 10–12 mmol/L ใน 24 ชม.',true],
+      ['ให้ 3% hypertonic saline อย่างรวดเร็วเพื่อให้ Na⁺ กลับปกติภายใน 2 ชม.',false,'การเพิ่ม Na⁺ เร็วเสี่ยง osmotic demyelination syndrome'],
+      ['ไม่ต้องสนใจ Na⁺ เพราะจะกลับปกติเองเมื่อได้ steroid',false],
+      ['ให้ desmopressin เพื่อเพิ่ม Na⁺',false]],
+      explain:'Hyponatremia เรื้อรังทำให้สมองปรับ osmolyte การแก้เร็วเกินไปทำให้เกิด osmotic demyelination (อาการทางระบบประสาทหลังรักษา 3–5 วัน) ถ้า Na⁺ เพิ่มเร็วเกินไปอาจเปลี่ยนเป็นสารน้ำที่ Na⁺ ต่ำกว่า',
+      fix:'แก้ Na⁺ ไม่เกิน 10–12 mmol/L ต่อ 24 ชม. เพื่อป้องกัน osmotic demyelination'}),
+    multi({q:'การรักษา/การตรวจเพิ่มเติมที่เหมาะสม (เลือกได้หลายข้อ)',opts:[
+      [`Dextrose 0.25–0.5 g/kg IV (เจือจาง) แก้ hypoglycemia (glucose ${L.Glu} mg/dL) แล้วเติม dextrose 2.5–5% ในสารน้ำ`,true,false,'cortisol deficiency ทำให้ hypoglycemia'],
+      ['ACTH stimulation test เพื่อยืนยันการวินิจฉัย',true,false,'gold standard (post-ACTH cortisol < 2 µg/dL)'],
+      ['หลังยืนยัน: mineralocorticoid (DOCP หรือ fludrocortisone) + glucocorticoid ระยะยาว',true,false,'การรักษาต่อเนื่องตลอดชีวิต'],
+      ['เติม KCl 20 mEq/L ในสารน้ำ',false,true,'K⁺ สูงอยู่แล้ว'],
+      ['Furosemide 2 mg/kg เพื่อขับ K⁺',false,true,'สัตว์อยู่ในภาวะ hypovolemia จะทำให้แย่ลง']],
+      explain:'ครอบคลุม shock, hyperkalemia, hypoglycemia และการวินิจฉัยยืนยัน แล้ววางแผนการรักษาระยะยาว',
+      fix:'อย่าลืมแก้ hypoglycemia และยืนยันด้วย ACTH stimulation test'})
+  ];
+  p.dx='Hypoadrenocortical crisis: hypovolemic shock, hyperkalemia (ECG change), hyponatremia, Na⁺:K⁺ < 27, hypoglycemia และ metabolic acidosis';
+  p.points=['Bradycardia ในภาวะช็อก + hyperkalemia → คิดถึง Addison','ไม่พบ stress leukogram ในสัตว์ป่วยหนักเป็นเบาะแสสำคัญ','Dexamethasone ไม่รบกวน ACTH stim','แก้ Na⁺ ช้าๆ ≤ 10–12 mmol/L/24 ชม.'];
+  return p;}},
+
+/* 6 ---------- Feline CHF ---------- */
+{id:'chf',title:'Feline congestive heart failure (pulmonary edema)',sys:'Cardio · Respiratory',make(){
+  const p=patient([{sp:'cat',breeds:['DSH (Domestic Shorthair)','Maine Coon','Ragdoll','British Shorthair','Persian'],wt:[4,7.5],age:[5,13],sex:['MN','MN','FS']}]);
+  const mode=Math.random()<.6?'ralk':'racid';
+  p.cc=pick(['หายใจอ้าปาก หอบมากเฉียบพลัน','หายใจลำบาก นอนหมอบไม่ยอมขยับ','หายใจเร็ว ท้องกระเพื่อม ไม่กินอาหาร']);
+  p.hx=`${pick(['เพิ่งได้รับ methylprednisolone acetate ฉีดเมื่อ 1 สัปดาห์ก่อน','เพิ่งได้รับการวางยาสลบและสารน้ำเพื่อขูดหินปูนเมื่อ 3 วันก่อน','ไม่เคยมีประวัติโรคหัวใจ'])} · อยู่ในบ้านทั้งหมด`;
+  const hr=RI(200,250),la=rd(R(1.9,2.6),1);
+  p.pe=[['Mentation','ตื่น เครียดมาก',1],['HR',`${hr} bpm มี gallop rhythm`,1],['RR',mode==='ralk'?`${RI(64,90)} /min open-mouth`:`${RI(40,54)} /min ตื้น หายใจล้า`,1],['Temp',`${f(R(35.5,37.2),1)} °C`,1],['MM','ซีด–คล้ำ (cyanotic เล็กน้อย)',1],['Auscultation','crackles ทั้งสองข้าง',1],['SpO₂',`${RI(84,90)}% (room air)`,1],['POCUS',`B-lines หลายจุดทั้งสองข้าง · LA:Ao ≈ ${la}`,1]];
+  p.labs=mode==='ralk'?makeLabs({pH:R(7.47,7.53),pCO2:R(23,28),Na:R(150,158),K:R(3.6,4.5),AG:R(15,22),iCa:R(1.12,1.28),Glu:R(180,280),Lac:R(2,3.8),PCV:R(32,40),TS:R(7,8)})
+                      :makeLabs({pH:R(7.18,7.27),pCO2:R(56,70),Na:R(150,158),K:R(3.6,4.5),AG:R(15,22),iCa:R(1.12,1.28),Glu:R(180,280),Lac:R(2.2,4),PCV:R(32,40),TS:R(7,8)});
+  p.ecg={type:'sinus',hr};
+  const w=p.wt,L=p.labs;
+  p.steps=[
+    single({q:'สิ่งที่ควรทำเป็นอันดับแรก',opts:[
+      ['ให้ O₂ (oxygen cage/flow-by), จับบังคับให้น้อยที่สุด, ประเมินด้วย POCUS อย่างรวดเร็วโดยไม่ restrain และพิจารณา sedation เบาๆ',true],
+      ['จับนอนหงายถ่ายภาพรังสีช่องอก 2 ท่าทันที',false,'การ restrain แมวที่หายใจลำบากรุนแรงอาจทำให้เกิด arrest'],
+      ['เจาะเลือด arterial blood gas ก่อนให้ O₂',false,'ไม่ควรเลื่อนการให้ O₂'],
+      ['ให้สารน้ำ IV bolus เพราะแมวตัวเย็น',false,'สารน้ำจะทำให้ pulmonary edema แย่ลง']],
+      explain:'แมวที่หายใจลำบากรุนแรงเปราะบางต่อความเครียดมาก หลัก “stabilize before diagnose”: O₂, minimal handling, POCUS (TFAST/VetBLUE) เพื่อแยก pulmonary edema กับ pleural effusion',
+      fix:'แมวหายใจลำบาก: O₂ + minimal handling ก่อนการตรวจวินิจฉัยที่ต้อง restrain',pts:15}),
+    stepAB(p,mode),
+    num({q:`กำหนดขนาด furosemide (mg) ครั้งแรก IV/IM สำหรับแมวหนัก ${w} kg`,unit:'mg',lo:1*w,hi:2*w,tol:.5,
+      explain:`Furosemide 1–2 mg/kg = ${fmtN(w)}–${fmtN(2*w)} mg IV (หรือ IM ถ้าใส่ catheter ไม่ได้) ซ้ำได้ทุก 1–2 ชม. จน RR และแรงหายใจลดลง แล้วลดขนาด · ติดตาม RR, hydration, K⁺ และ renal values`,
+      fix:'Furosemide ในแมว acute CHF: 1–2 mg/kg IV/IM ซ้ำได้ตามการตอบสนอง'}),
+    single({q:mode==='ralk'?`pCO₂ ${L.pCO2} mmHg ที่ต่ำในแมวตัวนี้บ่งชี้อะไร`:`pCO₂ ${L.pCO2} mmHg ที่สูงในแมวตัวนี้บ่งชี้อะไร`,opts:mode==='ralk'?[
+      ['Hyperventilation จาก hypoxemia/ความเครียด — ยังระบายอากาศได้ แต่ต้องแก้ oxygenation',true],
+      ['Ventilatory failure ต้องใส่ท่อช่วยหายใจทันที',false],
+      ['Metabolic alkalosis จากการอาเจียน',false],
+      ['ค่าคลาดเคลื่อนจากการเก็บเลือด',false]]:[
+      ['Ventilatory failure/กล้ามเนื้อหายใจล้า — เป็นสัญญาณอันตราย พิจารณา intubation + positive-pressure ventilation ถ้าไม่ตอบสนองต่อ O₂ และ furosemide',true],
+      ['การชดเชยของ metabolic alkalosis',false],
+      ['Hyperventilation จากความเครียด',false],
+      ['ปกติในแมวที่หายใจเร็ว',false]],
+      explain:mode==='ralk'?'ในระยะแรกของ pulmonary edema hypoxemia กระตุ้นการหายใจทำให้ pCO₂ ลดลง':'pCO₂ ที่สูงขึ้นในแมวที่หายใจลำบาก หมายถึงสัตว์ไม่สามารถระบาย CO₂ ได้ (exhaustion) มีความเสี่ยงต่อ respiratory arrest สูง',
+      fix:'pCO₂ ต่ำ = hyperventilation; pCO₂ สูงในสัตว์หายใจลำบาก = ventilatory failure (อันตราย)'}),
+    single({q:`POCUS พบ B-lines หลายจุดทั้งสองข้าง และ LA:Ao ≈ ${la} แปลผลอย่างไร`,opts:[
+      ['Left atrial enlargement (LA:Ao > 1.5) ร่วมกับ pulmonary edema → cardiogenic (CHF) สงสัย cardiomyopathy เช่น HCM',true],
+      ['ปกติ ไม่เกี่ยวกับหัวใจ ควรคิดถึง feline asthma',false],
+      ['Pleural effusion ต้องเจาะระบายทันที',false],
+      ['Pneumothorax',false]],
+      explain:'LA:Ao > 1.5 ในแมวบ่งชี้ left atrial enlargement ร่วมกับ B-lines แบบกระจาย สนับสนุน cardiogenic pulmonary edema · ประวัติการได้ steroid หรือสารน้ำ เป็นปัจจัยกระตุ้นที่พบบ่อย',
+      fix:'ใช้ POCUS: B-lines + LA:Ao > 1.5 สนับสนุน CHF'}),
+    multi({q:'การรักษาเสริมที่เหมาะสม (เลือกได้หลายข้อ)',opts:[
+      ['Butorphanol 0.2–0.4 mg/kg IM/IV เพื่อลดความเครียด',true,false,'ลดความเครียดและการใช้ออกซิเจน'],
+      ['Thoracocentesis หากตรวจพบ pleural effusion ปริมาณมาก',true,false,'ทั้งวินิจฉัยและรักษา'],
+      ['อบอุ่นร่างกายแบบ passive/ค่อยเป็นค่อยไป',true,false,'hypothermia พบบ่อยในแมว CHF'],
+      ['IV fluid bolus เพื่อแก้ hypothermia และ hypotension',false,true,'เพิ่ม pulmonary edema'],
+      ['Dexamethasone ลดการอักเสบในปอด',false,true,'glucocorticoid อาจกระตุ้น CHF ในแมว'],
+      ['Meloxicam ลดปวด',false,false,'ไม่มีข้อบ่งชี้และเสี่ยงต่อไต']],
+      explain:'Acute feline CHF: O₂, furosemide, anxiolysis, thoracocentesis ถ้ามี effusion และหลีกเลี่ยงสารน้ำและ steroid · เมื่อ stable จึงทำ echocardiography',
+      fix:'ห้ามให้สารน้ำ bolus และ steroid ในแมว CHF'})
+  ];
+  p.dx=`Congestive heart failure (cardiogenic pulmonary edema) ร่วมกับ ${mode==='ralk'?'respiratory alkalosis จาก hyperventilation':'respiratory acidosis จาก ventilatory failure'}`;
+  p.points=['O₂ + minimal handling ก่อน','POCUS แยก pulmonary edema กับ pleural effusion','Furosemide 1–2 mg/kg ซ้ำได้','pCO₂ สูงในแมวหายใจลำบาก = อันตราย','หลีกเลี่ยงสารน้ำ/steroid'];
+  return p;}},
+
+/* 7 ---------- Anesthetic CPA ---------- */
+{id:'anes',title:'Anesthetic-related cardiopulmonary arrest',sys:'CPR · Anesthesia',make(){
+  const p=patient([{sp:'dog',breeds:['พันธุ์ผสม','Pomeranian','Chihuahua','Golden Retriever','French Bulldog'],wt:[3,30],age:[1,9],sex:['F','M']},{sp:'cat',breeds:['DSH (Domestic Shorthair)','Persian','Siamese'],wt:[2.5,5.5],age:[1,8],sex:['F','M']}]);
+  const pre=pick([{d:'dexmedetomidine + methadone',r:['atipamezole','naloxone']},{d:'midazolam + butorphanol',r:['flumazenil','naloxone']},{d:'acepromazine + methadone',r:['naloxone']},{d:'dexmedetomidine + butorphanol',r:['atipamezole','naloxone']}]);
+  const proc=p.sex==='F'?'ovariohysterectomy':'castration';
+  p.cc=`ผ่าตัด ${proc} แบบ elective`;
+  p.hx=`Premedication: ${pre.d} IM · Induction: propofol IV · Maintenance: isoflurane ในออกซิเจน · ตรวจร่างกายและผลเลือดก่อนวางยาสลบปกติ`;
+  const rhythm=pick(['asystole','pea','vf']);
+  p.pe=[['สถานการณ์',`ผ่าตัดไป ${RI(15,35)} นาที HR ลดลงเรื่อยๆ จนคลำชีพจรไม่ได้`,1],['ETCO₂',`ลดจาก ${RI(36,42)} → ${RI(6,10)} mmHg`,1],['SpO₂','อ่านค่าไม่ได้',1],['Pupils','ขยาย อยู่ตรงกลาง',1],['Heart sounds','ไม่ได้ยิน',1],['Isoflurane',`vaporizer ตั้งไว้ ${pick(['2.5','3','3.5'])}%`,1]];
+  p.labs=normalLabs(p.sp);p.labsTitle='ผลเลือดก่อนวางยาสลบ';
+  p.ecg=null;
+  const post=makeLabs({HCO3:R(15,18.5),pCO2:R(54,66),Na:p.sp==='dog'?R(143,150):R(150,156),K:R(4.2,5.2),AG:R(22,28),iCa:p.sp==='dog'?R(1.15,1.3):R(1.05,1.2),Glu:R(160,240),Lac:R(3.5,6),PCV:p.labs.PCV,TS:p.labs.TS});
+  const has=x=>pre.r.includes(x);
+  const cpr=cprSteps(p,rhythm,'คุณเป็นผู้ดูแลการดมยา ยืนยันได้ว่าไม่มีชีพจรและไม่หายใจ');
+  p.steps=[
+    single({q:'สิ่งที่ต้องทำกับระบบดมยาทันที',opts:[
+      ['ปิด vaporizer (isoflurane) และ flush ระบบด้วย 100% O₂ พร้อมแจ้งทีมเริ่ม CPR',true],
+      ['ลด isoflurane ลงเหลือ 1% แล้วรอดูอาการ',false,'ต้องหยุดยาดมสลบทั้งหมดเมื่อเกิด arrest'],
+      ['เพิ่ม isoflurane เพราะสัตว์อาจตื่น',false],
+      ['ถอดท่อช่วยหายใจออก',false,'ท่อช่วยหายใจจำเป็นสำหรับการช่วยหายใจระหว่าง CPR']],
+      explain:'Anesthetic-related CPA มีอัตรารอดสูงกว่าสาเหตุอื่นมาก ถ้าตอบสนองเร็ว: หยุดยาสลบทั้งหมด flush 100% O₂ เริ่ม CPR และ reverse ยาที่ reverse ได้',
+      fix:'เมื่อเกิด CPA ใต้ยาสลบ ให้หยุดยาดมสลบและ flush ด้วย O₂ ทันที',pts:10}),
+    ...cpr.slice(0,1),
+    multi({q:`สัตว์ได้รับ premedication ${pre.d} ควรให้ยา reversal ใด (เลือกได้หลายข้อ)`,opts:[
+      ['Naloxone 0.04 mg/kg IV',has('naloxone'),false,has('naloxone')?'reverse opioid (methadone/butorphanol)':'ไม่ได้รับ opioid'],
+      ['Atipamezole 0.1 mg/kg (100 µg/kg) IV/IM',has('atipamezole'),false,has('atipamezole')?'reverse α₂-agonist (dexmedetomidine)':'ไม่ได้รับ α₂-agonist'],
+      ['Flumazenil 0.01 mg/kg IV',has('flumazenil'),false,has('flumazenil')?'reverse benzodiazepine (midazolam)':'ไม่ได้รับ benzodiazepine'],
+      ['Doxapram เพื่อกระตุ้นการหายใจ',false,false,'ไม่แนะนำใน CPR เพิ่ม O₂ demand ของสมอง'],
+      ['Dexamethasone 1 mg/kg IV',false,false,'ไม่มีหลักฐานว่าช่วยใน CPR']],
+      explain:`RECOVER แนะนำให้ reverse ยาที่ reverse ได้ระหว่าง CPR ในเคสที่เกี่ยวกับการวางยาสลบ${pre.d.includes('acepromazine')?' · acepromazine ไม่มียา reversal':''} · propofol และ isoflurane ไม่มี reversal (หยุดยาและรอ metabolize/ขับออก)`,
+      fix:'จำคู่ยา–reversal: opioid → naloxone, α₂-agonist → atipamezole, benzodiazepine → flumazenil'}),
+    ...cpr.slice(1),
+    stepAB(p,'mixed',post,{scene:'หลังกู้ชีพ 6 นาที เกิด ROSC ได้ venous blood gas ดังนี้',sceneLabs:post,q:'แปลผล blood gas หลัง ROSC: ความผิดปกติของกรด–ด่างคืออะไร'}),
+    single({q:'เป้าหมายการดูแลหลัง ROSC (post-cardiac arrest care) ข้อใดถูกต้อง',opts:[
+      ['SBP ≥ 100 / MAP ≥ 80 mmHg, SpO₂ 94–98%, PaCO₂ 32–43 mmHg (normocapnia), หลีกเลี่ยง hyperthermia และ rapid rewarming',true],
+      ['ให้ FiO₂ 100% ต่อเนื่องให้ SpO₂ = 100% ตลอด',false,'hyperoxemia เพิ่ม reperfusion injury'],
+      ['Hyperventilate ให้ PaCO₂ ~25 mmHg เพื่อลด ICP ทุกราย',false,'ทำให้ cerebral vasoconstriction และ ischemia'],
+      ['ให้สารน้ำ 90 mL/kg ทุกรายหลัง ROSC',false,'เสี่ยง volume overload']],
+      explain:'ช่วงหลัง ROSC มีความเสี่ยง re-arrest สูง ต้องดูแล hemodynamic optimization, normoxemia, normocapnia, neuroprotection และติดตาม ECG, BP, glucose, electrolyte ใน ICU',
+      fix:'ทบทวน post-cardiac arrest targets: MAP ≥ 80, SpO₂ 94–98%, normocapnia'})
+  ];
+  p.dx=`Anesthetic-related CPA (${{asystole:'asystole',pea:'PEA',vf:'ventricular fibrillation'}[rhythm]}) หลัง premedication ${pre.d} → หลัง ROSC พบ mixed respiratory + metabolic acidosis`;
+  p.points=['หยุดยาสลบ + flush O₂ + CPR ทันที','Reverse ยาที่ reverse ได้','Shockable vs non-shockable rhythm','Epinephrine 0.01 mg/kg, defib 2 → 4 J/kg','ETCO₂ ใช้ประเมินคุณภาพ CPR และ ROSC'];
+  return p;}}
+];
+
+/* ================= ECG ================= */
+function ecgPath(type,hr,W=640,H=110,secs=4){
+  const px=W/secs,base=H*0.62,pts=[];
+  const g=(t,c,w,a)=>a*Math.exp(-((t-c)**2)/(2*w*w));
+  if(type==='vf'){const ph=[R(0,6),R(0,6),R(0,6)];for(let x=0;x<=W;x+=2){const t=x/px;pts.push([x,base-(13*Math.sin(2*Math.PI*5.3*t+ph[0])+9*Math.sin(2*Math.PI*3.6*t+ph[1])+6*Math.sin(2*Math.PI*8.2*t+ph[2]))*(0.65+0.35*Math.sin(t*1.4))]);}}
+  else if(type==='asystole'){for(let x=0;x<=W;x+=4){const t=x/px;pts.push([x,base-2*Math.sin(t*1.7)+R(-0.6,0.6)]);}}
+  else{
+    const rr=60/hr,bt=[];for(let t=R(0.08,rr*0.6);t<secs+rr;t+=rr)bt.push(t);
+    for(let x=0;x<=W;x++){const t=x/px;let y=0;
+      bt.forEach((b,i)=>{const d=t-b;if(Math.abs(d)>0.5)return;let k=type;if(type==='vpc'&&i%4===3)k='wide';
+        if(k==='sinus'||k==='vpc'||k==='pea'){y+=g(d,-0.09,0.016,5)+g(d,-0.014,0.005,-5)+g(d,0,0.007,46)+g(d,0.013,0.006,-11)+g(d,0.15,0.03,8);}
+        else if(k==='hyperk'){y+=g(d,0,0.02,26)+g(d,0.035,0.02,-7)+g(d,0.2,0.028,30);}
+        else{y+=g(d,0,0.03,38)+g(d,0.065,0.035,-24);}
+      });
+      pts.push([x,base-y]);}
+  }
+  return 'M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+}
+function ecgSVG(e){
+  const showHR=!(e.type==='asystole'||e.type==='vf');
+  return `<div class="ecg"><div class="ecg-meta"><span>Lead II · 25 mm/s</span><span>${showHR?'HR ≈ '+e.hr+' bpm':'HR —'}</span></div><svg viewBox="0 0 640 110" preserveAspectRatio="none"><defs><pattern id="sg" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8 0H0V8" fill="none" stroke="var(--grid1)" stroke-width=".6"/></pattern><pattern id="bgp" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="url(#sg)"/><path d="M40 0H0V40" fill="none" stroke="var(--grid2)" stroke-width="1"/></pattern></defs><rect width="640" height="110" fill="url(#bgp)"/><path d="${ecgPath(e.type,e.hr||60)}" fill="none" stroke="var(--trace)" stroke-width="1.6" stroke-linejoin="round"/></svg></div>`;
+}
+
+/* ================= rendering ================= */
+const app=document.getElementById('app');
+const ST={mode:'practice',cur:null,idx:0,res:[],t0:0,timer:null,last:null,hist:[]};
+try{ST.hist=JSON.parse(localStorage.getItem('ersim-hist')||'[]');}catch(e){}
+try{const m=localStorage.getItem('ersim-mode');if(m)ST.mode=m;}catch(e){}
+
+function flagOf(v,ref){if(!ref)return'';if(v>ref[1])return'<span class="flag H">H</span>';if(v<ref[0])return'<span class="flag L">L</span>';return'';}
+function labTable(L,sp,title){
+  const ref=REF[sp];
+  let rows=LABROWS.map(([k,l,u,d])=>`<tr><td>${l}</td><td class="val">${f(L[k],d)}${flagOf(L[k],ref[k])}</td><td class="muted small">${u}</td><td class="ref">${ref[k].join('–')}</td></tr>`).join('');
+  rows+=L.extra.map(([l,v,u,r,d])=>`<tr><td>${l}</td><td class="val">${f(v,d)}${flagOf(v,r)}</td><td class="muted small">${u}</td><td class="ref">${r.join('–')}</td></tr>`).join('');
+  return `<div class="card labmini" style="padding:14px"><div class="sec-title"><h3>${title||'Venous blood gas & chemistry'}</h3><span class="small muted">${sp==='dog'?'ref: สุนัข':'ref: แมว'}</span></div><div style="overflow-x:auto"><table class="lab"><thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Ref</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function chartHTML(p){
+  return `<div class="chart">
+  <div class="card"><div class="sec-title"><h3>Signalment</h3><span class="chip clay">${p.sp==='dog'?'🐕 สุนัข':'🐈 แมว'}</span></div>
+    <div class="signal"><div><div class="k">พันธุ์</div><div class="v">${p.breed}</div></div><div><div class="k">อายุ</div><div class="v">${p.age} ปี</div></div><div><div class="k">เพศ</div><div class="v">${SEX[p.sex]}</div></div><div><div class="k">น้ำหนัก</div><div class="v mono">${p.wt} kg</div></div></div>
+  </div>
+  <div class="card"><h3 style="margin-bottom:6px">Chief complaint</h3><p style="margin:0 0 8px">${p.cc}</p><p class="small muted" style="margin:0"><b>History:</b> ${p.hx}</p></div>
+  <div class="card"><h3 style="margin-bottom:6px">Physical examination</h3><div class="pe">${p.pe.map(([k,v,a])=>`<div class="pe-row ${a?'ab':''}"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>${p.ecg?`<div style="margin-top:12px">${ecgSVG(p.ecg)}</div>`:''}</div>
+  ${labTable(p.labs,p.sp,p.labsTitle)}
+  </div>`;
+}
+function fmtTime(s){return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+
+function renderHome(){
+  clearInterval(ST.timer);
+  const histRows=ST.hist.slice(0,12).map(h=>`<tr><td class="small">${h.date}</td><td>${h.title}</td><td class="mono">${h.mode}</td><td class="mono">${h.pct}%</td><td class="mono">${h.time}</td></tr>`).join('');
+  app.innerHTML=`<div class="wrap">
+  <header class="hero"><span class="eyebrow">Small Animal Emergency · Case-based exam</span>
+    <h1>จำลองสอบ Emergency<br>สัตว์เล็กแบบ situation case</h1>
+    <p class="lead">ทุกเคสสุ่ม signalment, chief complaint, ผลตรวจร่างกาย, ECG และผล blood gas/electrolyte ใหม่ทุกครั้ง ตอบคำถามเรื่อง resuscitation, ยาฉุกเฉิน, CPR และการแปลผล–แก้ไขกรดด่างและอิเล็กโทรไลต์ แล้วรับคะแนนพร้อมสิ่งที่ต้องแก้ไข</p>
+    <div class="home-actions"><button class="btn primary" id="randBtn">🎲 สุ่มเคสใหม่</button>
+      <select id="caseSel"><option value="">— หรือเลือกหัวข้อ —</option>${CASES.map(c=>`<option value="${c.id}">${c.title}</option>`).join('')}</select>
+      <button class="btn" id="pickBtn">เริ่มเคสที่เลือก</button></div>
+    <p class="small muted" style="margin-top:14px"><b>Practice</b> = เฉลยทันทีหลังตอบแต่ละข้อ · <b>Exam</b> = เฉลยรวมตอนจบเคส (เปลี่ยนได้ที่มุมขวาบน)</p>
+  </header>
+  <div class="feature-grid">
+    <div class="card"><h3>Resuscitation</h3><p class="small muted" style="margin:0">Triage, shock bolus, hypotensive resuscitation, blood product</p></div>
+    <div class="card"><h3>CPR (RECOVER 2024)</h3><p class="small muted" style="margin:0">Rhythm recognition, epinephrine, defibrillation, ETCO₂, reversal</p></div>
+    <div class="card"><h3>Blood gas</h3><p class="small muted" style="margin:0">Primary disorder, compensation, anion gap, bicarbonate</p></div>
+    <div class="card"><h3>Electrolytes</h3><p class="small muted" style="margin:0">Hyperkalemia, KCl sliding scale, Na⁺ correction, phosphate</p></div>
+  </div>
+  <section class="block"><h2 style="margin-bottom:14px">หัวข้อเคสทั้งหมด</h2><div class="case-grid">${CASES.map(c=>`<div class="card case-card" data-id="${c.id}"><div class="sys">${c.sys}</div><h3 style="margin-top:4px">${c.title}</h3></div>`).join('')}</div></section>
+  <section class="block"><h2 style="margin-bottom:14px">ประวัติการทำเคส</h2>${histRows?`<div class="card" style="padding:0;overflow-x:auto"><table><thead><tr><th>วันที่</th><th>เคส</th><th>โหมด</th><th>คะแนน</th><th>เวลา</th></tr></thead><tbody>${histRows}</tbody></table></div><p style="margin-top:10px"><button class="btn" id="clearHist" style="font-size:.85rem;padding:6px 12px">ล้างประวัติ</button></p>`:'<p class="muted">ยังไม่มีประวัติ เริ่มทำเคสแรกได้เลย</p>'}</section>
+  </div>
+  <footer><div class="wrap">ใช้สำหรับการเรียนและทบทวนเท่านั้น ขนาดยาและค่าอ้างอิงเป็นค่าโดยประมาณจากตำราและ RECOVER 2024 — ตรวจสอบกับโปรโตคอลของโรงพยาบาลและฉลากยาก่อนใช้จริงเสมอ</div></footer>`;
+  document.getElementById('randBtn').onclick=()=>startCase();
+  document.getElementById('pickBtn').onclick=()=>{const v=document.getElementById('caseSel').value;startCase(v||undefined);};
+  document.querySelectorAll('.case-card').forEach(c=>c.onclick=()=>startCase(c.dataset.id));
+  const ch=document.getElementById('clearHist');if(ch)ch.onclick=()=>{ST.hist=[];try{localStorage.removeItem('ersim-hist');}catch(e){}renderHome();};
+  window.scrollTo(0,0);
+}
+
+function startCase(id){
+  let tpl;
+  if(id)tpl=CASES.find(c=>c.id===id);
+  else{const pool=CASES.filter(c=>c.id!==ST.last);tpl=pick(pool);}
+  ST.last=tpl.id;
+  const p=tpl.make();p.tid=tpl.id;p.title=tpl.title;p.sys=tpl.sys;p.caseNo=Math.random().toString(36).slice(2,7).toUpperCase();
+  ST.cur=p;ST.idx=0;ST.res=[];ST.t0=Date.now();
+  app.innerHTML=`<div class="wrap">
+    <div class="case-head"><div><span class="eyebrow" style="margin:0">Case #${p.caseNo}</span><h2>Emergency situation</h2></div>
+      <div class="meta"><span class="chip">โหมด: ${ST.mode==='exam'?'Exam':'Practice'}</span><span class="chip mono" id="clock">00:00</span><button class="btn" id="quitBtn" style="padding:5px 12px;font-size:.85rem">ออก</button></div></div>
+    <div class="layout">${chartHTML(p)}<div><div class="card qcard" id="qcard"></div></div></div></div>`;
+  document.getElementById('quitBtn').onclick=()=>{if(confirm('ออกจากเคสนี้? คะแนนจะไม่ถูกบันทึก'))renderHome();};
+  clearInterval(ST.timer);ST.timer=setInterval(()=>{const c=document.getElementById('clock');if(c)c.textContent=fmtTime((Date.now()-ST.t0)/1000);},500);
+  renderStep();window.scrollTo(0,0);
+}
+
+function renderStep(){
+  const p=ST.cur,st=p.steps[ST.idx],n=p.steps.length;
+  let h=`<div class="progress"><i style="width:${ST.idx/n*100}%"></i></div><div class="qhead"><span>ข้อ ${ST.idx+1} / ${n}</span><span>${st.pts} คะแนน</span></div>`;
+  if(st.scene)h+=`<div class="scene"><b>สถานการณ์:</b> ${st.scene}</div>`;
+  if(st.ecg)h+=ecgSVG(st.ecg);
+  if(st.sceneLabs)h+=labTable(st.sceneLabs,p.sp,'Venous blood gas หลัง ROSC');
+  h+=`<h3 class="q">${st.q}</h3>`;
+  if(st.type==='num')h+=`<div class="numrow"><input id="numIn" type="text" inputmode="decimal" placeholder="ใส่ตัวเลข" autocomplete="off"><span class="unit">${st.unit}</span></div><p class="hint">ตอบเป็นตัวเลข (ทศนิยมได้)</p>`;
+  else{h+=`<div class="opts">${st.opts.map((o,k)=>`<label class="opt" data-k="${k}"><input type="${st.type==='single'?'radio':'checkbox'}" name="a" value="${k}"><span class="box"></span><span>${o.t}</span></label>`).join('')}</div>`;
+    if(st.type==='multi')h+='<p class="hint">เลือกได้มากกว่า 1 ข้อ · เลือกข้อผิดจะถูกหักคะแนน</p>';}
+  h+=`<div id="fb"></div><div class="actions"><button class="btn primary" id="subBtn">ส่งคำตอบ</button></div>`;
+  const q=document.getElementById('qcard');q.innerHTML=h;
+  const ni=document.getElementById('numIn');if(ni){ni.focus();ni.onkeydown=e=>{if(e.key==='Enter')document.getElementById('subBtn').click();};}
+  document.getElementById('subBtn').onclick=submit;
+  if(window.innerWidth<900)q.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function grade(st){
+  const r={score:0,v:'bad',given:'',correct:'',notes:[],harm:[]};
+  if(st.type==='num'){
+    const raw=(document.getElementById('numIn').value||'').replace(',','.').trim();const v=parseFloat(raw);
+    if(raw===''||isNaN(v))return null;
+    r.given=`${fmtN(v)} ${st.unit}`;
+    r.correct=st.ans!=null?`≈ ${fmtN(st.ans)} ${st.unit} (ยอมรับ ${fmtN(st.lo)}–${fmtN(st.hi)})`:`${fmtN(st.lo)}–${fmtN(st.hi)} ${st.unit}`;
+    if(v>=st.lo-1e-9&&v<=st.hi+1e-9)r.score=st.pts;
+    else if(v>=st.lo*(1-st.tol)&&v<=st.hi*(1+st.tol)){r.score=st.pts/2;r.notes.push('ใกล้เคียงแต่ยังอยู่นอกช่วงที่ยอมรับ — ตรวจสอบการคำนวณและหน่วย');}
+    else if(v>st.hi*3||v<st.lo/3)r.notes.push('ต่างจากค่าที่ถูกต้องหลายเท่า — มักเกิดจากการสับสน mg กับ mL หรือหน่วยต่อ kg');
+  }else{
+    const sel=[...document.querySelectorAll('#qcard input:checked')].map(i=>+i.value);
+    if(!sel.length)return null;
+    const correct=st.opts.map((o,k)=>o.c?k:-1).filter(k=>k>=0);
+    r.given=sel.map(k=>st.opts[k].t).join('<br>• ');
+    r.correct=correct.map(k=>st.opts[k].t).join('<br>• ');
+    if(st.type==='single'){
+      const o=st.opts[sel[0]];if(o.c)r.score=st.pts;else if(o.why)r.notes.push(`ข้อที่เลือก: ${o.why}`);
+    }else{
+      const tp=sel.filter(k=>st.opts[k].c).length,fp=sel.filter(k=>!st.opts[k].c).length;
+      r.score=Math.max(0,(tp-fp)/correct.length)*st.pts;
+      sel.filter(k=>!st.opts[k].c).forEach(k=>{const o=st.opts[k];const t=(o.harm?'⚠ อันตราย: ':'ไม่ควรเลือก: ')+o.t+(o.why?' — '+o.why:'');r.notes.push(t);if(o.harm)r.harm.push(o.t+(o.why?' — '+o.why:''));});
+      correct.filter(k=>!sel.includes(k)).forEach(k=>{const o=st.opts[k];r.notes.push('ควรเลือก: '+o.t+(o.why?' — '+o.why:''));});
+    }
+    r.sel=sel;
+  }
+  r.score=rd(r.score,1);
+  r.v=r.score>=st.pts-1e-9?'ok':r.score>0?'partial':'bad';
+  return r;
+}
+function fbHTML(st,r){
+  return `<div class="fb ${r.v}"><div class="fb-h">${r.v==='ok'?'✓ ถูกต้อง':r.v==='partial'?'◐ ถูกบางส่วน':'✗ ยังไม่ถูก'} · ${fmtN(r.score)}/${st.pts}</div>${r.v!=='ok'?`<p style="margin:0 0 6px"><b>คำตอบที่ถูก:</b><br>${st.type==='multi'?'• ':''}${r.correct}</p>`:''}${r.notes.length?'<ul>'+r.notes.map(x=>`<li>${x}</li>`).join('')+'</ul>':''}<p class="exp">${st.explain}</p></div>`;
+}
+function submit(){
+  const p=ST.cur,st=p.steps[ST.idx];const r=grade(st);
+  if(!r){const b=document.getElementById('subBtn');b.textContent='กรุณาตอบก่อน';setTimeout(()=>{b.textContent='ส่งคำตอบ';},1200);return;}
+  ST.res[ST.idx]=r;
+  const last=ST.idx===p.steps.length-1;
+  if(ST.mode==='practice'){
+    document.querySelectorAll('#qcard input').forEach(i=>i.disabled=true);
+    document.querySelectorAll('#qcard .opt').forEach(l=>{l.classList.add('locked');const o=st.opts[+l.dataset.k];if(o.c)l.classList.add('right');else if(l.querySelector('input').checked)l.classList.add('wrong');});
+    document.getElementById('fb').innerHTML=fbHTML(st,r);
+    const b=document.getElementById('subBtn');b.textContent=last?'ดูผลคะแนน →':'ข้อต่อไป →';
+    b.onclick=()=>{if(last)renderResults();else{ST.idx++;renderStep();}};
+  }else{if(last)renderResults();else{ST.idx++;renderStep();}}
+}
+
+function renderResults(){
+  clearInterval(ST.timer);
+  const p=ST.cur,secs=(Date.now()-ST.t0)/1000;
+  const max=p.steps.reduce((a,s)=>a+s.pts,0),got=ST.res.reduce((a,r)=>a+r.score,0),pct=Math.round(got/max*100);
+  const g=pct>=80?['g1','ผ่านดีมาก']:pct>=60?['g2','ผ่าน — มีจุดต้องทบทวน']:['g3','ยังไม่ผ่าน — ควรทบทวน'];
+  const fixes=[];const harms=[];
+  p.steps.forEach((s,i)=>{const r=ST.res[i];if(r.v!=='ok'&&!fixes.includes(s.fix))fixes.push(s.fix);r.harm.forEach(h=>harms.push(h));});
+  const C=2*Math.PI*62,col=pct>=80?'var(--olive)':pct>=60?'var(--amber)':'var(--red)';
+  ST.hist.unshift({date:new Date().toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}),title:p.title,mode:ST.mode==='exam'?'Exam':'Practice',pct,time:fmtTime(secs)});
+  ST.hist=ST.hist.slice(0,30);try{localStorage.setItem('ersim-hist',JSON.stringify(ST.hist));}catch(e){}
+  app.innerHTML=`<div class="wrap">
+  <div class="res-top">
+    <svg class="score-ring" viewBox="0 0 150 150"><circle class="bg" cx="75" cy="75" r="62"/><circle class="fg" cx="75" cy="75" r="62" stroke="${col}" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/><text x="75" y="80" text-anchor="middle" font-size="32">${pct}%</text><text x="75" y="102" text-anchor="middle" font-size="11" fill="var(--ink-2)">${fmtN(got)} / ${max}</text></svg>
+    <div><span class="grade ${g[0]}">${g[1]}</span><h2>${p.title}</h2><p class="muted" style="margin:6px 0 4px">Case #${p.caseNo} · ${p.sp==='dog'?'สุนัข':'แมว'} ${p.breed} ${p.wt} kg · เวลา ${fmtTime(secs)}</p><p style="margin:0"><b>Diagnosis/สรุปปัญหา:</b> ${p.dx}</p></div>
+  </div>
+  <div class="two" style="margin-bottom:22px">
+    <div><h3 style="margin-bottom:10px">สิ่งที่ต้องแก้ไขในเคสนี้</h3>${fixes.length||harms.length?`<ul class="fixlist">${harms.map(h=>`<li class="harm">⚠ <b>เลือกการรักษาที่อาจเป็นอันตราย:</b> ${h}</li>`).join('')}${fixes.map(x=>`<li>${x}</li>`).join('')}</ul>`:'<p class="muted">ไม่มี — ตอบถูกทุกข้อ 🎉</p>'}</div>
+    <div class="card"><h3 style="margin-bottom:8px">Key learning points</h3><ul class="points">${p.points.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+  </div>
+  <h3 style="margin-bottom:10px">เฉลยรายข้อ</h3>
+  <div class="review">${p.steps.map((s,i)=>{const r=ST.res[i];return `<details class="rv" ${r.v!=='ok'?'open':''}><summary><span class="ic ${r.v}">${r.v==='ok'?'✓':r.v==='partial'?'◐':'✗'}</span><span>${i+1}. ${s.q}</span><span class="mono small muted">${fmtN(r.score)}/${s.pts}</span></summary><div class="body"><p><b>คำตอบของคุณ:</b> ${s.type==='multi'?'• ':''}${r.given}</p>${r.v!=='ok'?`<p><b>คำตอบที่ถูก:</b> ${s.type==='multi'?'• ':''}${r.correct}</p>`:''}${r.notes.length?'<ul style="margin:4px 0;padding-left:18px">'+r.notes.map(x=>`<li>${x}</li>`).join('')+'</ul>':''}<p class="muted">${s.explain}</p></div></details>`;}).join('')}</div>
+  <div class="actions" style="justify-content:flex-start;margin:26px 0 50px;flex-wrap:wrap"><button class="btn primary" id="nextCase">🎲 เคสใหม่ (สุ่ม)</button><button class="btn" id="again">ทำหัวข้อเดิม (สุ่มค่าใหม่)</button><button class="btn" id="home">หน้าแรก</button></div>
+  </div>`;
+  document.getElementById('nextCase').onclick=()=>startCase();
+  document.getElementById('again').onclick=()=>startCase(p.tid);
+  document.getElementById('home').onclick=renderHome;
+  window.scrollTo(0,0);
+}
+
+/* ================= chrome ================= */
+(function(){
+  const root=document.documentElement;
+  try{const s=localStorage.getItem('ersim-theme');if(s)root.dataset.theme=s;}catch(e){}
+  document.getElementById('themeBtn').onclick=()=>{const dark=root.dataset.theme?root.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;root.dataset.theme=dark?'light':'dark';try{localStorage.setItem('ersim-theme',root.dataset.theme);}catch(e){}};
+  const seg=document.querySelectorAll('#modeSeg button');
+  const sync=()=>seg.forEach(b=>b.classList.toggle('on',b.dataset.m===ST.mode));sync();
+  seg.forEach(b=>b.onclick=()=>{ST.mode=b.dataset.m;sync();try{localStorage.setItem('ersim-mode',ST.mode);}catch(e){}
+    if(ST.cur&&document.getElementById('qcard')){const c=document.querySelector('.case-head .chip');if(c)c.textContent='โหมด: '+(ST.mode==='exam'?'Exam':'Practice');}});
+  document.getElementById('homeLink').onclick=()=>{if(document.getElementById('qcard')&&!confirm('ออกจากเคสนี้?'))return;renderHome();};
+})();
+renderHome();
+</script>
+</body>
+</html>
